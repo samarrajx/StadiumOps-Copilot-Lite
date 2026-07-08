@@ -44,7 +44,7 @@ test('gateGrid: empty gates array renders without throwing', () => {
   assert.doesNotThrow(() => {
     renderGateGrid(container, { gates: [] });
   });
-  assert.equal(container.children.length, 0, 'should render 0 gate cards');
+  assert.equal(container.querySelectorAll('.gate-card').length, 0, 'should render 0 gate cards');
 });
 
 test('gateGrid: null signals renders without throwing', () => {
@@ -52,7 +52,7 @@ test('gateGrid: null signals renders without throwing', () => {
   assert.doesNotThrow(() => {
     renderGateGrid(container, null);
   });
-  assert.equal(container.children.length, 0, 'should render 0 gate cards');
+  assert.equal(container.querySelectorAll('.gate-card').length, 0, 'should render 0 gate cards');
 });
 
 test('gateGrid: Gate C gets the distinct non-accessible styling class', () => {

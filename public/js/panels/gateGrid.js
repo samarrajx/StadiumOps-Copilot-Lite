@@ -45,9 +45,38 @@ const TREND_LABEL = {
  * @param {HTMLElement} container
  * @param {object|null} signals - LiveSignals object (may be null/undefined during loading)
  */
-export function renderGateGrid(container, signals) {
+export function renderGateGrid(container, signals, aiConfig = {}) {
   clearChildren(container);
 
+  const { recState = { status: 'idle', data: null, error: null }, onRecommend = () => {} } = aiConfig;
+
+  // AI Recommendation Section
+  const aiBtn = el('button', { class: 'btn-generate btn-gate-ai' }, ['Get AI Routing Plan']);
+  if (recState.status === 'loading') {
+    aiBtn.setAttribute('disabled', 'true');
+    aiBtn.textContent = 'Analyzing live conditions...';
+  }
+  aiBtn.addEventListener('click', onRecommend);
+
+  let aiContent = null;
+  if (recState.status === 'loading') {
+    aiContent = el('div', { class: 'loading-indicator' }, ['Generating optimal route...']);
+  } else if (recState.status === 'error') {
+    aiContent = el('div', { class: 'error-message' }, [recState.error]);
+  } else if (recState.status === 'success' && recState.data) {
+    aiContent = el('div', { class: 'ai-recommendation-card' }, [
+      el('strong', { class: 'ai-label' }, ['Recommendation: ']),
+      recState.data
+    ]);
+  }
+
+  const aiHeader = el('div', { class: 'gate-ai-section' }, [
+    aiBtn,
+    ...(aiContent ? [aiContent] : [])
+  ]);
+  container.appendChild(aiHeader);
+
+  // Render Gate Cards
   const gates = signals?.gates ?? [];
 
   for (const gate of gates) {
@@ -73,8 +102,6 @@ export function renderGateGrid(container, signals) {
     );
 
     // Wheelchair accessibility row
-    // Gate C (and any future non-accessible gate) gets a visually distinct
-    // warning element, not just a subtle missing icon.
     const accessEl = accessible
       ? el('div', { class: 'gate-access gate-access--ok' },           ['♿ Wheelchair Accessible'])
       : el('div', { class: 'gate-access gate-access--no-wheelchair' }, ['⚠ No Wheelchair Access — use nearest accessible gate']);
@@ -108,20 +135,38 @@ export function renderGateGrid(container, signals) {
 
 /**
  * Subscribes the gate grid to a store, rendering immediately and on every
- * subsequent state update. The store's state is expected to have a `signals`
- * property containing the LiveSignals object.
+ * subsequent state update.
  *
  * @param {HTMLElement}                         container - DOM node to render into.
  * @param {{ getState: Function, subscribe: Function }} store - App state store.
  * @returns {Function} Unsubscribe function — call to detach this panel.
  */
 export function mountGateGrid(container, store) {
-  const render = (state) => {
-    renderGateGrid(container, state.signals ?? null);
+  let recState = { status: 'idle', data: null, error: null };
+
+  const handleRecommendClick = async () => {
+    recState = { status: 'loading', data: null, error: null };
+    render(); // force re-render with loading state
+    try {
+      // dynamic import to avoid circular dependency issues and keep the module pure if api is missing
+      const { fetchGateRecommendation } = await import('../api.js');
+      const res = await fetchGateRecommendation();
+      recState = { status: 'success', data: res.recommendation, error: null };
+    } catch (err) {
+      recState = { status: 'error', data: null, error: err.message };
+    }
+    render(); // force re-render with success/error state
+  };
+
+  const render = (state = store.getState()) => {
+    renderGateGrid(container, state.signals ?? null, {
+      recState,
+      onRecommend: handleRecommendClick
+    });
   };
 
   // Render once immediately with current state
-  render(store.getState());
+  render();
 
   // Subscribe to future state changes
   return store.subscribe(render);
