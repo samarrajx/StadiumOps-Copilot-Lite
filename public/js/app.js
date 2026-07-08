@@ -9,6 +9,7 @@ import { generateLiveSignals } from './liveSignals.js';
 import { clearChildren } from './utils/dom.js';
 
 import { mountGateGrid } from './panels/gateGrid.js';
+import { mountStatusBar } from './panels/statusBar.js';
 import { mountBriefingPanel } from './panels/briefing.js';
 import { mountAssistantPanel } from './panels/assistant.js';
 import { mountBroadcastPanel } from './panels/broadcast.js';
@@ -33,6 +34,11 @@ async function bootstrap() {
     setInterval(updateSignals, 8000);
 
     // 3. Mount all UI panels
+    const statusContainer = document.getElementById('panel-status');
+    if (statusContainer) {
+      mountStatusBar(statusContainer, store);
+    }
+
     const gateGridContainer = document.getElementById('panel-gates');
     if (gateGridContainer) {
       mountGateGrid(gateGridContainer, store);
