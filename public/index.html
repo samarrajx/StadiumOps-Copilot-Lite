@@ -4,59 +4,120 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>StadiumOps Copilot</title>
+  
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <link rel="stylesheet" href="/css/index.css" />
   <link rel="icon" href="/icons/icon-192x192.svg" />
   <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
   <meta name="theme-color" content="#0f172a" />
 </head>
 <body>
-  <div class="ambient-bg">
-    <div class="ambient-glow glow-1"></div>
-    <div class="ambient-glow glow-2"></div>
-    <div class="ambient-glow glow-3"></div>
-  </div>
+  <div class="ambient-bg"></div>
 
   <a href="#main-content" class="skip-link">Skip to main content</a>
   
-  <header class="app-header">
-    <h1>StadiumOps Copilot</h1>
+  <!-- Sticky Command Bar -->
+  <header class="command-bar">
+    <div class="cmd-brand">
+      <i data-lucide="shield-check" class="cmd-logo"></i>
+      <div class="cmd-titles">
+        <h1>StadiumOps Copilot</h1>
+        <span class="cmd-subtitle">AI Command Center</span>
+      </div>
+    </div>
+    <div class="cmd-actions">
+      <button class="btn-icon" aria-label="Search" title="Search (Ctrl+K)" id="btn-search">
+        <i data-lucide="search"></i>
+        <span class="cmd-shortcut">Ctrl+K</span>
+      </button>
+      <button class="btn-icon" aria-label="Notifications">
+        <i data-lucide="bell"></i>
+      </button>
+      <button class="btn-icon" aria-label="Settings">
+        <i data-lucide="settings"></i>
+      </button>
+      <div class="cmd-avatar">
+        <i data-lucide="user"></i>
+      </div>
+    </div>
   </header>
 
+  <!-- Executive KPI Strip -->
+  <section class="kpi-strip" id="panel-kpi" aria-label="Executive KPIs">
+    <!-- Populated by kpiStrip.js -->
+  </section>
+
+  <!-- Main Dashboard Grid -->
   <main id="main-content" class="app-grid">
     <section class="panel panel-status" aria-labelledby="status-heading">
-      <h2 id="status-heading">Live Operations Status</h2>
+      <header class="panel-header">
+        <i data-lucide="activity"></i>
+        <h2 id="status-heading">Live Operations Status</h2>
+      </header>
       <div id="panel-status"></div>
     </section>
 
     <section class="panel panel-left" aria-labelledby="gates-heading">
-      <h2 id="gates-heading">Gate Densities</h2>
+      <header class="panel-header">
+        <i data-lucide="users"></i>
+        <h2 id="gates-heading">Gate Densities</h2>
+      </header>
       <div id="panel-gates"></div>
     </section>
 
     <section class="panel panel-mid-top" aria-labelledby="briefing-heading">
-      <h2 id="briefing-heading">Situation Briefing</h2>
+      <header class="panel-header">
+        <i data-lucide="file-text"></i>
+        <h2 id="briefing-heading">Situation Briefing</h2>
+      </header>
       <div id="panel-briefing"></div>
     </section>
 
     <section class="panel panel-mid-bottom" aria-labelledby="accessibility-heading">
-      <h2 id="accessibility-heading">Accessibility Requests</h2>
+      <header class="panel-header">
+        <i data-lucide="wheelchair"></i>
+        <h2 id="accessibility-heading">Accessibility Requests</h2>
+      </header>
       <div id="panel-accessibility"></div>
     </section>
 
     <section class="panel panel-right-top" aria-labelledby="broadcast-heading">
-      <h2 id="broadcast-heading">Digital Signage Broadcast</h2>
+      <header class="panel-header">
+        <i data-lucide="radio"></i>
+        <h2 id="broadcast-heading">Digital Signage Broadcast</h2>
+      </header>
       <div id="panel-broadcast"></div>
     </section>
 
     <section class="panel panel-right-bottom" aria-labelledby="assistant-heading">
-      <h2 id="assistant-heading">Decision Assistant</h2>
+      <header class="panel-header">
+        <i data-lucide="bot"></i>
+        <h2 id="assistant-heading">Decision Assistant</h2>
+      </header>
       <div id="panel-assistant"></div>
     </section>
   </main>
+
+  <!-- Command Palette Overlay -->
+  <div id="command-palette" class="palette-overlay hidden" aria-hidden="true">
+    <div class="palette-modal">
+      <div class="palette-input-group">
+        <i data-lucide="search"></i>
+        <input type="text" id="palette-input" placeholder="Search operations, gates, commands..." />
+        <span class="palette-hint">ESC to close</span>
+      </div>
+      <ul class="palette-results">
+        <!-- Results -->
+      </ul>
+    </div>
+  </div>
 
   <script type="module" src="/js/app.js"></script>
 </body>

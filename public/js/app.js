@@ -33,7 +33,14 @@ async function bootstrap() {
     updateSignals();
     setInterval(updateSignals, 8000);
 
-    // 3. Mount all UI panels
+    const kpiContainer = document.getElementById('panel-kpi');
+    if (kpiContainer) {
+      // Dynamic import to avoid missing files breaking tests if not fully implemented yet
+      import('./panels/kpiStrip.js').then(({ mountKpiStrip }) => {
+        mountKpiStrip(kpiContainer, store);
+      });
+    }
+
     const statusContainer = document.getElementById('panel-status');
     if (statusContainer) {
       mountStatusBar(statusContainer, store);
@@ -62,6 +69,43 @@ async function bootstrap() {
     const accessibilityContainer = document.getElementById('panel-accessibility');
     if (accessibilityContainer) {
       mountAccessibilityPanel(accessibilityContainer, api);
+    }
+
+    // 4. Command Palette Logic
+    const paletteOverlay = document.getElementById('command-palette');
+    const paletteInput = document.getElementById('palette-input');
+    const btnSearch = document.getElementById('btn-search');
+
+    const togglePalette = (show) => {
+      if (!paletteOverlay) return;
+      if (show) {
+        paletteOverlay.classList.remove('hidden');
+        paletteOverlay.setAttribute('aria-hidden', 'false');
+        if (paletteInput) paletteInput.focus();
+      } else {
+        paletteOverlay.classList.add('hidden');
+        paletteOverlay.setAttribute('aria-hidden', 'true');
+        if (paletteInput) paletteInput.blur();
+      }
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        togglePalette(paletteOverlay?.classList.contains('hidden'));
+      }
+      if (e.key === 'Escape') {
+        togglePalette(false);
+      }
+    });
+
+    if (btnSearch) {
+      btnSearch.addEventListener('click', () => togglePalette(true));
+    }
+    if (paletteOverlay) {
+      paletteOverlay.addEventListener('click', (e) => {
+        if (e.target === paletteOverlay) togglePalette(false);
+      });
     }
 
     // 4. Register Service Worker for PWA (Cache-first for shell, Network-first for /api)

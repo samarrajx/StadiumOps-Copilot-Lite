@@ -61,9 +61,9 @@ test('gateGrid: Gate C gets the distinct non-accessible styling class', () => {
   const gateCCard = container.querySelector('[data-gate-id="C"]');
   assert.ok(gateCCard, 'Gate C card should exist');
   assert.ok(gateCCard.classList.contains('gate-card--no-wheelchair'), 'Gate C should have no-wheelchair modifier class');
-  const accessDiv = gateCCard.querySelector('.gate-access');
-  assert.ok(accessDiv.classList.contains('gate-access--no-wheelchair'), 'Gate C access indicator should have warning class');
-  assert.ok(accessDiv.textContent.includes('⚠'), 'Gate C access indicator should include warning icon');
+  const accessDiv = gateCCard.querySelector('.text-danger');
+  assert.ok(accessDiv, 'Gate C should have danger class for accessibility');
+  assert.ok(accessDiv.innerHTML.includes('data-lucide="alert-triangle"'), 'Gate C access indicator should include warning icon');
 });
 
 test('gateGrid: accessible gates get the accessible styling class', () => {
@@ -71,15 +71,17 @@ test('gateGrid: accessible gates get the accessible styling class', () => {
   renderGateGrid(container, SAMPLE_SIGNALS);
   const gateACard = container.querySelector('[data-gate-id="A"]');
   assert.ok(gateACard, 'Gate A card should exist');
-  assert.ok(gateACard.classList.contains('gate-card--accessible'), 'Gate A should have accessible modifier class');
   assert.ok(!gateACard.classList.contains('gate-card--no-wheelchair'), 'Gate A should not have warning class');
+  const accessDiv = gateACard.querySelector('.text-success');
+  assert.ok(accessDiv, 'Gate A should have success class for accessibility');
+  assert.ok(accessDiv.innerHTML.includes('data-lucide="wheelchair"'), 'Gate A access indicator should include wheelchair icon');
 });
 
 test('gateGrid: wait times are rendered formatted, not as raw numbers', () => {
   const container = getContainer();
   renderGateGrid(container, SAMPLE_SIGNALS);
   const gateACard = container.querySelector('[data-gate-id="A"]');
-  const waitEl = gateACard.querySelector('.gate-wait');
+  const waitEl = gateACard.querySelector('.gate-metric-val'); // First one is wait time
   assert.ok(waitEl.textContent.includes('2 min'), 'Wait time should be formatted (e.g. 2 min)');
   assert.ok(!waitEl.textContent.trim().match(/^2$/), 'Wait time should not be just the raw number');
 });

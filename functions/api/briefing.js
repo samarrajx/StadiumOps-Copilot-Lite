@@ -50,9 +50,9 @@ export function createHandler({
         systemPrompt: SYSTEM_PROMPT,
         userPrompt:   buildBriefingPrompt(signals),
       });
-    } catch {
+    } catch (err) {
       // Do not expose env.GEMINI_API_KEY or raw error in response
-      return jsonResponse({ error: 'AI service unavailable. Please try again.' }, 503, cors);
+      return jsonResponse({ error: err.message || 'AI service unavailable. Please try again.' }, 503, cors);
     }
 
     return jsonResponse({ briefing }, 200, cors);

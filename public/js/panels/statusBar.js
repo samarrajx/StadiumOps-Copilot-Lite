@@ -6,18 +6,12 @@
  * SECURITY: Uses el() and clearChildren() exclusively. No innerHTML.
  */
 
-import { el, clearChildren } from '../utils/dom.js';
+import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 
 // ---------------------------------------------------------------------------
 // renderStatusBar
 // ---------------------------------------------------------------------------
 
-/**
- * Renders the top status bar.
- *
- * @param {HTMLElement} container
- * @param {object|null} signals
- */
 export function renderStatusBar(container, signals) {
   clearChildren(container);
 
@@ -35,10 +29,13 @@ export function renderStatusBar(container, signals) {
   const matchStatusText = match.matchStatus ? match.matchStatus.toUpperCase() : 'UNKNOWN STATUS';
 
   const matchCard = el('div', { class: 'status-card match-card' }, [
-    el('div', { class: 'status-card__header' }, ['Match Information']),
-    el('div', { class: 'match-teams' }, [matchTeamText]),
-    el('div', { class: 'match-stage text-muted' }, [matchStageText]),
-    el('div', { class: 'match-status-badge' }, [matchStatusText]),
+    el('div', { class: 'status-card__header' }, [
+      el('span', {}, ['Match Information']),
+      el('i', { 'data-lucide': 'trophy' })
+    ]),
+    el('div', { class: 'match-teams font-bold text-lg mt-2' }, [matchTeamText]),
+    el('div', { class: 'match-stage text-muted text-sm mb-2' }, [matchStageText]),
+    el('span', { class: 'badge badge-info' }, [matchStatusText]),
   ]);
 
   // --- Weather Info ---
@@ -46,15 +43,18 @@ export function renderStatusBar(container, signals) {
   const tempText = weather.tempCelsius !== undefined ? `${weather.tempCelsius}°C` : '--°C';
   
   const weatherChildren = [
-    el('div', { class: 'status-card__header' }, ['Weather']),
-    el('div', { class: 'weather-main' }, [`${conditionText}, ${tempText}`]),
+    el('div', { class: 'status-card__header' }, [
+      el('span', {}, ['Live Weather']),
+      el('i', { 'data-lucide': 'cloud' })
+    ]),
+    el('div', { class: 'weather-main font-bold text-lg mt-2' }, [`${tempText} — ${conditionText}`]),
   ];
   
   if (weather.advisory) {
     weatherChildren.push(
-      el('div', { class: 'weather-advisory' }, [
-        el('strong', {}, ['Advisory: ']), 
-        weather.advisory
+      el('div', { class: 'weather-advisory mt-2' }, [
+        el('span', { class: 'badge badge-high' }, ['Advisory']), 
+        el('span', { class: 'text-sm ml-2 text-muted' }, [weather.advisory])
       ])
     );
   }
@@ -62,29 +62,32 @@ export function renderStatusBar(container, signals) {
   const weatherCard = el('div', { class: 'status-card weather-card' }, weatherChildren);
 
   // --- Transit Info ---
-  const transitList = el('div', { class: 'transit-list' }, []);
+  const transitList = el('div', { class: 'transit-list mt-2 flex flex-col gap-2' }, []);
   
   for (const line of transit) {
-    let stateClass = '';
-    if (line.state === 'on-time') stateClass = 'transit-state--on-time';
-    else if (line.state === 'delayed') stateClass = 'transit-state--delayed';
-    else if (line.state === 'disrupted') stateClass = 'transit-state--disrupted';
+    let stateClass = 'badge-outline';
+    if (line.state === 'on-time') stateClass = 'badge-low';
+    else if (line.state === 'delayed') stateClass = 'badge-medium';
+    else if (line.state === 'disrupted') stateClass = 'badge-high';
 
-    const item = el('div', { class: 'transit-item' }, [
-      el('div', { class: 'transit-name' }, [
-        el('strong', {}, [line.name ?? 'Unknown Line']),
-        el('span', { class: 'text-muted' }, [` (${line.mode ?? 'unknown'})`])
+    const item = el('div', { class: 'transit-item flex justify-between items-center p-2 border border-light rounded' }, [
+      el('div', { class: 'transit-name flex flex-col' }, [
+        el('strong', { class: 'text-sm' }, [line.name ?? 'Unknown Line']),
+        el('span', { class: 'text-muted text-xs' }, [line.mode ?? 'unknown'])
       ]),
-      el('div', { class: 'transit-status' }, [
-        el('span', { class: `transit-state-badge ${stateClass}` }, [line.state ? line.state.toUpperCase() : 'UNKNOWN']),
-        el('span', { class: 'transit-eta text-muted' }, [`ETA: ${line.etaMinutes !== undefined ? line.etaMinutes + 'm' : '--'}`])
+      el('div', { class: 'transit-status flex flex-col items-end' }, [
+        el('span', { class: `badge ${stateClass} mb-1` }, [line.state ? line.state.toUpperCase() : 'UNKNOWN']),
+        el('span', { class: 'transit-eta text-muted text-xs' }, [`ETA: ${line.etaMinutes !== undefined ? line.etaMinutes + 'm' : '--'}`])
       ])
     ]);
     transitList.appendChild(item);
   }
 
   const transitCard = el('div', { class: 'status-card transit-card' }, [
-    el('div', { class: 'status-card__header' }, ['Transit Updates']),
+    el('div', { class: 'status-card__header' }, [
+      el('span', {}, ['Transit Networks']),
+      el('i', { 'data-lucide': 'train' })
+    ]),
     transitList
   ]);
 
@@ -96,6 +99,7 @@ export function renderStatusBar(container, signals) {
   ]);
 
   container.appendChild(grid);
+  refreshIcons();
 }
 
 // ---------------------------------------------------------------------------

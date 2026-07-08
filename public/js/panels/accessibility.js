@@ -5,27 +5,23 @@
  * SECURITY: Uses el() and clearChildren() exclusively. No innerHTML.
  */
 
-import { el, clearChildren } from '../utils/dom.js';
+import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 
 // ---------------------------------------------------------------------------
 // renderAccessibilityPanel
 // ---------------------------------------------------------------------------
 
-/**
- * Renders the accessibility panel UI.
- *
- * @param {HTMLElement} container
- * @param {object} state - { loading: boolean, ranked: Array|null, dispatched: Set<string>, error: string|null }
- * @param {object} handlers - { onGenerate: Function, onDispatch: Function }
- */
 export function renderAccessibilityPanel(container, state, handlers = {}) {
   clearChildren(container);
 
   // 1. Header and Generate Button
   const btn = el(
     'button',
-    { class: 'btn-generate-accessibility', 'aria-busy': state.loading ? 'true' : 'false' },
-    [state.loading ? 'Analyzing Requests...' : 'Get Insights']
+    { class: 'btn btn-primary', 'aria-busy': state.loading ? 'true' : 'false' },
+    [
+      el('i', { 'data-lucide': 'list-checks' }),
+      state.loading ? 'Analyzing Requests...' : 'Get Insights'
+    ]
   );
   if (state.loading) {
     btn.setAttribute('disabled', 'true');
@@ -34,53 +30,71 @@ export function renderAccessibilityPanel(container, state, handlers = {}) {
     if (handlers.onGenerate) handlers.onGenerate();
   });
 
-  const header = el('header', { class: 'panel-header' }, [btn]);
+  const btnRow = el('div', { class: 'mb-4' }, [btn]);
 
   // 2. Error Message
   let errorNode = null;
   if (state.error) {
-    errorNode = el('div', { class: 'error-message', role: 'alert' }, [state.error]);
+    errorNode = el('div', { class: 'error-message text-danger', role: 'alert' }, [state.error]);
   }
 
   // 3. Results / Insights List
   let resultsNode = null;
-  if (state.ranked && state.ranked.length === 0) {
-    resultsNode = el('div', { class: 'empty-state text-muted' }, ['No pending accessibility requests at this time.']);
+  if (state.loading && !state.ranked) {
+    resultsNode = el('div', { class: 'skeleton mt-2' }, [el('div', {style: 'height:200px'}, [])]);
+  } else if (state.ranked && state.ranked.length === 0) {
+    resultsNode = el('div', { class: 'empty-state text-muted flex flex-col items-center mt-4' }, [
+      el('i', { 'data-lucide': 'check-circle' }),
+      'No pending accessibility requests at this time.'
+    ]);
   } else if (state.ranked) {
-    resultsNode = el('div', { class: 'accessibility-insights', 'aria-live': 'polite' }, []);
+    resultsNode = el('div', { class: 'access-queue mt-2', 'aria-live': 'polite' }, []);
     
-    // Sort array by urgencyRank just in case it isn't perfectly sorted from the API
+    // Sort array by urgencyRank
     const sorted = [...state.ranked].sort((a, b) => a.urgencyRank - b.urgencyRank);
 
     for (const req of sorted) {
       const isDispatched = state.dispatched.has(req.id);
       
       const reqClass = [
-        'accessibility-card',
-        isDispatched ? 'accessibility-card--dispatched' : ''
+        'access-req',
+        isDispatched ? 'completed' : ''
       ].join(' ').trim();
 
-      const typeBadge = el('span', { class: 'accessibility-badge' }, [`Rank ${req.urgencyRank}: ${req.type}`]);
-      const location = el('span', { class: 'accessibility-location' }, [`Gate ${req.gateId}`]);
-      const duration = el('span', { class: 'accessibility-duration' }, [`Pending: ${req.minutesOpen}m`]);
+      const badgeColor = req.urgencyRank === 1 ? 'badge-high' : req.urgencyRank === 2 ? 'badge-medium' : 'badge-outline';
+      const typeBadge = el('span', { class: `badge ${badgeColor}` }, [`Rank ${req.urgencyRank}: ${req.type}`]);
       
-      const headerRow = el('div', { class: 'accessibility-card__header' }, [typeBadge, location, duration]);
+      const metaRow = el('div', { class: 'access-meta mt-1' }, [
+        el('span', {}, [el('i', { 'data-lucide': 'map-pin', style: 'width:12px;height:12px' }), ` Gate ${req.gateId}`]),
+        el('span', {}, [el('i', { 'data-lucide': 'clock', style: 'width:12px;height:12px' }), ` ${req.minutesOpen}m`])
+      ]);
       
-      const noteRow = el('p', { class: 'accessibility-note text-muted' }, [req.note || 'No additional note.']);
+      const noteRow = el('p', { class: 'text-muted text-xs mt-1' }, [req.note || 'No additional note.']);
       
-      const actionRow = el('div', { class: 'accessibility-card__action-row' }, [
-        el('strong', {}, ['Suggested Action: ']),
+      const actionRow = el('div', { class: 'text-xs text-info mt-1' }, [
+        el('strong', {}, ['Action: ']),
         req.suggestedAction
+      ]);
+
+      const infoSection = el('div', { class: 'access-info' }, [
+        typeBadge,
+        metaRow,
+        noteRow,
+        actionRow
       ]);
 
       const dispatchBtn = el(
         'button',
-        { class: 'btn-dispatch' },
-        [isDispatched ? '✓ Dispatched' : 'Mark as Dispatched']
+        { class: 'btn' },
+        [
+          el('i', { 'data-lucide': 'check' }),
+          isDispatched ? 'Dispatched' : 'Dispatch'
+        ]
       );
       
       if (isDispatched) {
         dispatchBtn.setAttribute('disabled', 'true');
+        dispatchBtn.classList.add('text-success');
       } else {
         dispatchBtn.addEventListener('click', () => {
           if (handlers.onDispatch) handlers.onDispatch(req.id);
@@ -88,23 +102,26 @@ export function renderAccessibilityPanel(container, state, handlers = {}) {
       }
 
       const card = el('article', { class: reqClass, 'data-req-id': req.id }, [
-        headerRow,
-        noteRow,
-        actionRow,
-        el('div', { class: 'accessibility-card__footer' }, [dispatchBtn])
+        infoSection,
+        el('div', { class: 'ml-4' }, [dispatchBtn])
       ]);
 
       resultsNode.appendChild(card);
     }
   } else if (!state.loading && !state.error) {
     // Initial empty state
-    resultsNode = el('div', { class: 'empty-state text-muted' }, ['Click "Get Insights" to rank pending accessibility requests.']);
+    resultsNode = el('div', { class: 'empty-state text-muted flex flex-col items-center mt-4' }, [
+      el('i', { 'data-lucide': 'list' }),
+      'Click "Get Insights" to rank pending requests.'
+    ]);
   }
 
   // Assemble
-  container.appendChild(header);
+  container.appendChild(btnRow);
   if (errorNode) container.appendChild(errorNode);
   if (resultsNode) container.appendChild(resultsNode);
+  
+  refreshIcons();
 }
 
 // ---------------------------------------------------------------------------

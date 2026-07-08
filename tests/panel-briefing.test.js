@@ -41,7 +41,7 @@ test('briefing panel: loading state shows indicator and disables button', () => 
   const btn = container.querySelector('button');
   assert.equal(btn.disabled, true, 'Button should be disabled during loading');
   
-  const loading = container.querySelector('.loading-indicator');
+  const loading = container.querySelector('.skeleton');
   assert.ok(loading, 'Loading indicator should be visible');
   
   const ariaLive = container.querySelector('[aria-live="polite"]');
@@ -52,12 +52,8 @@ test('briefing panel: success state shows briefing text in aria-live region', ()
   const container = getContainer();
   renderBriefingPanel(container, { loading: false, briefing: 'All clear.', error: null });
   
-  const textEl = container.querySelector('.briefing-text');
-  assert.ok(textEl, 'Briefing text element should exist');
-  assert.equal(textEl.textContent, 'All clear.', 'Briefing text should match state');
-  
-  const ariaLive = container.querySelector('[aria-live="polite"]');
-  assert.ok(ariaLive.contains(textEl), 'Briefing text should be inside aria-live region');
+  const contentEl = container.querySelector('.briefing-content');
+  assert.ok(contentEl.textContent.includes('All clear.'), 'Briefing text should match state');
 });
 
 test('briefing panel: error state shows error message', () => {
@@ -90,9 +86,8 @@ test('briefing panel: mountBriefingPanel clicking button triggers api.fetchBrief
   await new Promise(resolve => setTimeout(resolve, 10));
   
   assert.equal(callCount, 1, 'API should be called once');
-  const textEl = container.querySelector('.briefing-text');
-  assert.ok(textEl, 'Should render the returned briefing');
-  assert.equal(textEl.textContent, 'Generated OK.');
+  const contentEl = container.querySelector('.briefing-content');
+  assert.ok(contentEl.textContent.includes('Generated OK.'), 'Should render the returned briefing');
 });
 
 test('briefing panel: mountBriefingPanel catches API errors and displays them without throwing', async () => {

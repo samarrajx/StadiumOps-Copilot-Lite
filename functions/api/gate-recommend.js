@@ -60,8 +60,8 @@ export function createHandler({
         systemPrompt: SYSTEM_PROMPT,
         userPrompt:   buildAssistantPrompt(signals, GATE_RECOMMEND_QUESTION, []),
       });
-    } catch {
-      return jsonResponse({ error: 'AI service unavailable. Please try again.' }, 503, cors);
+    } catch (err) {
+      return jsonResponse({ error: err.message || 'AI service unavailable. Please try again.' }, 503, cors);
     }
 
     return jsonResponse({ recommendation }, 200, cors);

@@ -85,8 +85,8 @@ export function createHandler({
         userPrompt:   buildBroadcastPrompt(mv.value, lv.value),
         jsonMode:     true,
       });
-    } catch {
-      return jsonResponse({ error: 'AI service unavailable. Please try again.' }, 503, cors);
+    } catch (err) {
+      return jsonResponse({ error: err.message || 'AI service unavailable. Please try again.' }, 503, cors);
     }
 
     // 5. Parse + validate AI JSON response — never let malformed output reach client

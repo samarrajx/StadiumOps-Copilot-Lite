@@ -74,8 +74,8 @@ export function createHandler({
         userPrompt:   buildAccessibilityPrompt(openRequests),
         jsonMode:     true,
       });
-    } catch {
-      return jsonResponse({ error: 'AI service unavailable. Please try again.' }, 503, cors);
+    } catch (err) {
+      return jsonResponse({ error: err.message || 'AI service unavailable. Please try again.' }, 503, cors);
     }
 
     // 4. Parse + validate AI JSON response

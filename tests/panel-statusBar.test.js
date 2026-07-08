@@ -54,7 +54,7 @@ test('statusBar: renders match, weather, and transit cards', () => {
   
   const weatherCard = container.querySelector('.weather-card');
   assert.ok(weatherCard, 'should render weather card');
-  assert.ok(weatherCard.textContent.includes('Clear, 22°C'), 'should render weather condition and temp');
+  assert.ok(weatherCard.textContent.includes('22°C — Clear'), 'should render weather condition and temp');
   assert.ok(weatherCard.textContent.includes('Bring a jacket.'), 'should render weather advisory');
   
   const transitCard = container.querySelector('.transit-card');
@@ -88,13 +88,13 @@ test('statusBar: assigns correct semantic CSS class to transit states', () => {
   const items = transitList.querySelectorAll('.transit-item');
   
   // Train is on-time -> --low
-  assert.ok(items[0].querySelector('.transit-state--on-time'), 'on-time state should have correct class');
+  assert.ok(items[0].querySelector('.badge-low'), 'on-time state should have correct class');
   
   // Bus is delayed -> --medium
-  assert.ok(items[1].querySelector('.transit-state--delayed'), 'delayed state should have correct class');
+  assert.ok(items[1].querySelector('.badge-medium'), 'delayed state should have correct class');
   
   // Shuttle is disrupted -> --high
-  assert.ok(items[2].querySelector('.transit-state--disrupted'), 'disrupted state should have correct class');
+  assert.ok(items[2].querySelector('.badge-high'), 'disrupted state should have correct class');
 });
 
 test('statusBar: mountStatusBar renders immediately and updates on store changes', () => {

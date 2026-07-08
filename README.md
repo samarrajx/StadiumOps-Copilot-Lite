@@ -1,4 +1,4 @@
-# StadiumOps Copilot — Lite
+# StadiumOps Copilot — Premium Enterprise Edition
 
 A serverless, AI-powered control-room dashboard for FIFA World Cup 2026 venue operators.
 
@@ -18,6 +18,7 @@ A serverless, AI-powered control-room dashboard for FIFA World Cup 2026 venue op
 | **PS6. Handling Ambiguity** | **Accessibility**: Evaluates open accessibility requests and uses AI to rank them by urgency, generating context-aware suggested actions for staff to dispatch. |
 | **PS7. Code Quality & Modularity** | Dependency-injected handlers, pure pure functions for state/validation, minimal pub-sub architecture without bloated external frameworks. |
 | **PS8. Performance & Efficiency** | Caching of translations via a module-level Map, efficient client-side rendering (only re-rendering on state changes), and non-blocking PWA Service Worker shell caching. |
+| **PS9. Enterprise UI/UX** | Mission-critical design using a refined 12-column CSS grid, Lucide SVG icons, subtle glassmorphism frost overlays, and responsive `.skeleton` loaders. |
 
 ## How It Works
 
@@ -52,7 +53,7 @@ The architecture relies on a Vanilla JS frontend (PWA) talking to Cloudflare Pag
    ```
    This uses `wrangler pages dev` to serve the static frontend and the Cloudflare Functions locally.
 
-## Security
+## Security & Reliability
 
 The following security constraints were rigorously implemented:
 - **Zero-Injection UI**: The entire frontend is built using a custom `el()` DOM builder and `clearChildren()`. `innerHTML` is strictly prohibited and 0 instances exist in the codebase.
@@ -60,14 +61,14 @@ The following security constraints were rigorously implemented:
 - **CORS Enforcement**: API endpoints reject cross-origin requests, ensuring they can only be called by the application itself.
 - **Untrusted Input Labeling**: The AI prompts explicitly wrap user-provided text (like chat questions or broadcast messages) in `<untrusted_input>` blocks, instructing the model to treat it as data, not instruction.
 - **Strict Validation**: All JSON payloads (both client-to-server and AI-to-server) are validated against exact shape and length constraints before processing. Hallucinated IDs are explicitly rejected with 502 errors.
-- **Key Secrecy**: The API key is securely managed via `.dev.vars` / Wrangler secrets and never exposed to the client bundle.
+- **Key Secrecy & 503 Guardrails**: The API key is securely managed via `.dev.vars` / Wrangler secrets and never exposed to the client bundle. The backend correctly validates missing keys and securely bubbles explicit configuration errors to the UI (preventing masked 503 errors).
 
 ## Testing
 
-**Total Passing Tests: 222**
+**Total Passing Tests: 225**
 The test suite utilizes the native Node.js `node:test` runner and `jsdom`. It covers:
-- **Backend**: API prompt construction, rate-limit logic, JSON validation logic, and mocked Gemini REST calls.
-- **Frontend**: Store pub-sub mechanics, API wrappers, and JSDOM component rendering (ensuring UI logic, accessibility classes, and event listeners behave as expected).
+- **Backend**: API prompt construction, rate-limit logic, JSON validation logic, missing env variable guards, and mocked Gemini REST calls.
+- **Frontend**: Store pub-sub mechanics, API wrappers, and JSDOM component rendering (ensuring UI logic, accessibility classes, and event listeners behave as expected under the new Enterprise class structure).
 
 ## Accessibility
 

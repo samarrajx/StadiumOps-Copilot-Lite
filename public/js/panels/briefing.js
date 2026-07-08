@@ -5,37 +5,32 @@
  * SECURITY: Uses el() and clearChildren() exclusively. No innerHTML.
  */
 
-import { el, clearChildren } from '../utils/dom.js';
+import { el, clearChildren, refreshIcons, renderMarkdownToDOM } from '../utils/dom.js';
 
 // ---------------------------------------------------------------------------
 // renderBriefingPanel
 // ---------------------------------------------------------------------------
 
-/**
- * Renders the UI based on local state (loading, briefing text, error).
- *
- * @param {HTMLElement} container
- * @param {object} state - { loading: boolean, briefing: string|null, error: string|null }
- * @param {Function} [onGenerate] - Click handler for the button (optional for pure render testing)
- */
 export function renderBriefingPanel(container, state, onGenerate = () => {}) {
   clearChildren(container);
 
-  // Button header
+  // Button row
   const btn = el(
     'button',
-    { class: 'btn-generate', 'aria-busy': state.loading ? 'true' : 'false' },
-    [state.loading ? 'Generating...' : 'Generate Briefing']
+    { class: 'btn btn-primary', 'aria-busy': state.loading ? 'true' : 'false' },
+    [
+      el('i', { 'data-lucide': 'sparkles' }),
+      state.loading ? 'Generating...' : 'Generate Briefing'
+    ]
   );
   if (state.loading) {
     btn.setAttribute('disabled', 'true');
   }
   btn.addEventListener('click', onGenerate);
 
-  const header = el('header', { class: 'panel-header' }, [btn]);
+  const btnRow = el('div', { class: 'mb-4' }, [btn]);
 
-  // Content area: only one of loading / error / briefing shows at a time.
-  // The content container uses aria-live to announce updates to screen readers.
+  // Content area
   const contentArea = el('div', {
     class: 'briefing-content',
     'aria-live': 'polite',
@@ -43,19 +38,34 @@ export function renderBriefingPanel(container, state, onGenerate = () => {}) {
   });
 
   if (state.loading) {
-    contentArea.appendChild(el('div', { class: 'loading-indicator' }, ['Analyzing live signals...']));
+    contentArea.appendChild(el('div', { class: 'skeleton' }, [el('div', {style: 'height:150px'}, [])]));
   } else if (state.error) {
-    contentArea.appendChild(el('div', { class: 'error-message', role: 'alert' }, [state.error]));
+    contentArea.appendChild(el('div', { class: 'error-message text-danger', role: 'alert' }, [state.error]));
   } else if (state.briefing) {
-    // Briefing text is expected to be plain text, but we append it safely as text nodes.
-    contentArea.appendChild(el('p', { class: 'briefing-text' }, [state.briefing]));
+    // AI Badge
+    const badge = el('div', { class: 'ai-badge' }, [
+      el('i', { 'data-lucide': 'cpu' }),
+      'AI Generated'
+    ]);
+    contentArea.appendChild(badge);
+
+    // Markdown DOM nodes
+    const mdNodes = renderMarkdownToDOM(state.briefing);
+    for (const node of mdNodes) {
+      contentArea.appendChild(node);
+    }
   } else {
     // Initial state (empty)
-    contentArea.appendChild(el('p', { class: 'empty-state text-muted' }, ['Click "Generate Briefing" to get a situation report.']));
+    const emptyState = el('div', { class: 'empty-state text-muted flex flex-col items-center gap-2 mt-4' }, [
+      el('i', { 'data-lucide': 'inbox' }),
+      'Click "Generate Briefing" for an AI executive summary.'
+    ]);
+    contentArea.appendChild(emptyState);
   }
 
-  container.appendChild(header);
+  container.appendChild(btnRow);
   container.appendChild(contentArea);
+  refreshIcons();
 }
 
 // ---------------------------------------------------------------------------

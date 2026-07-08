@@ -4,68 +4,75 @@
  *
  * SECURITY: Uses el() and clearChildren() from P4 throughout — never innerHTML
  * with dynamic data. All gate fields are interpolated as text nodes only.
- */
-
-import { el, clearChildren } from '../utils/dom.js';
+ */import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 import { formatWaitTime, formatSeverityLabel } from '../utils/formatters.js';
 
 // ---------------------------------------------------------------------------
-// Constants — kept here so tests can verify class names against markup
+// Constants
 // ---------------------------------------------------------------------------
 
-const DENSITY_CLASS = {
-  low:    'density-low',
-  medium: 'density-medium',
-  high:   'density-high',
+const DENSITY_WIDTH = {
+  low: '30%',
+  medium: '65%',
+  high: '95%',
 };
 
-const TREND_ICON = {
-  rising:  '↑',
-  falling: '↓',
-  stable:  '→',
+const DENSITY_BG = {
+  low: 'var(--color-success)',
+  medium: 'var(--color-warning)',
+  high: 'var(--color-danger)',
+};
+
+const DENSITY_BADGE = {
+  low: 'badge-low',
+  medium: 'badge-medium',
+  high: 'badge-high',
+};
+
+const TREND_LUCIDE = {
+  rising: 'trending-up',
+  falling: 'trending-down',
+  stable: 'minus',
 };
 
 const TREND_LABEL = {
-  rising:  'Rising',
+  rising: 'Rising',
   falling: 'Falling',
-  stable:  'Stable',
+  stable: 'Stable',
 };
 
 // ---------------------------------------------------------------------------
 // renderGateGrid
 // ---------------------------------------------------------------------------
 
-/**
- * Clears `container` then renders one card per gate from `signals.gates`.
- * Uses CSS classes for density colour-coding and wheelchair status —
- * never inline hex colours or style attributes.
- * Gate C (wheelchairAccessible: false) gets the `gate-card--no-wheelchair`
- * class which renders with a distinct warning treatment in CSS.
- *
- * @param {HTMLElement} container
- * @param {object|null} signals - LiveSignals object (may be null/undefined during loading)
- */
 export function renderGateGrid(container, signals, aiConfig = {}) {
   clearChildren(container);
 
   const { recState = { status: 'idle', data: null, error: null }, onRecommend = () => {} } = aiConfig;
 
   // AI Recommendation Section
-  const aiBtn = el('button', { class: 'btn-generate btn-gate-ai' }, ['Get AI Routing Plan']);
+  const aiBtn = el('button', { class: 'btn btn-gate-ai' }, [
+    el('i', { 'data-lucide': 'sparkles' }),
+    recState.status === 'loading' ? 'Analyzing live conditions...' : 'Get AI Routing Plan'
+  ]);
   if (recState.status === 'loading') {
     aiBtn.setAttribute('disabled', 'true');
-    aiBtn.textContent = 'Analyzing live conditions...';
   }
   aiBtn.addEventListener('click', onRecommend);
 
   let aiContent = null;
   if (recState.status === 'loading') {
-    aiContent = el('div', { class: 'loading-indicator' }, ['Generating optimal route...']);
+    aiContent = el('div', { class: 'skeleton mt-2' }, [el('div', {style: 'height:60px'}, [])]);
   } else if (recState.status === 'error') {
-    aiContent = el('div', { class: 'error-message' }, [recState.error]);
+    aiContent = el('div', { class: 'ai-recommendation-card' }, [
+      el('span', { class: 'text-danger' }, [recState.error])
+    ]);
   } else if (recState.status === 'success' && recState.data) {
     aiContent = el('div', { class: 'ai-recommendation-card' }, [
-      el('strong', { class: 'ai-label' }, ['Recommendation: ']),
+      el('span', { class: 'ai-label' }, [
+        el('i', { 'data-lucide': 'check-circle' }),
+        'Recommendation'
+      ]),
       recState.data
     ]);
   }
@@ -82,51 +89,61 @@ export function renderGateGrid(container, signals, aiConfig = {}) {
   for (const gate of gates) {
     const accessible = gate.wheelchairAccessible;
 
-    // Density badge — colour comes from CSS class, never inline style
+    // Density badge
     const densityBadge = el(
       'span',
-      { class: `gate-density-badge ${DENSITY_CLASS[gate.density] ?? ''}` },
-      [formatSeverityLabel(gate.density)],
+      { class: `badge ${DENSITY_BADGE[gate.density] ?? 'badge-outline'}` },
+      [formatSeverityLabel(gate.density)]
     );
 
-    // Wait time — formatted via formatWaitTime, never raw number
-    const waitEl = el('span', { class: 'gate-wait' }, [
-      formatWaitTime(gate.waitTimeMinutes),
+    // Wait time
+    const waitEl = el('div', { class: 'gate-metric' }, [
+      el('i', { 'data-lucide': 'clock' }),
+      el('span', { class: 'gate-metric-val' }, [formatWaitTime(gate.waitTimeMinutes)])
     ]);
 
     // Trend indicator
-    const trendEl = el(
-      'span',
-      { class: `gate-trend gate-trend--${gate.trend ?? 'stable'}` },
-      [TREND_ICON[gate.trend] ?? '→', ' ', TREND_LABEL[gate.trend] ?? 'Stable'],
-    );
+    const trendEl = el('div', { class: 'gate-metric' }, [
+      el('i', { 'data-lucide': TREND_LUCIDE[gate.trend] ?? 'minus' }),
+      el('span', { class: 'gate-metric-val' }, [TREND_LABEL[gate.trend] ?? 'Stable'])
+    ]);
 
-    // Wheelchair accessibility row
-    const accessEl = accessible
-      ? el('div', { class: 'gate-access gate-access--ok' },           ['♿ Wheelchair Accessible'])
-      : el('div', { class: 'gate-access gate-access--no-wheelchair' }, ['⚠ No Wheelchair Access — use nearest accessible gate']);
+    // Wheelchair accessibility
+    const accessEl = el('div', { class: `gate-metric mt-2 ${accessible ? 'text-success' : 'text-danger'}` }, [
+      el('i', { 'data-lucide': accessible ? 'wheelchair' : 'alert-triangle' }),
+      el('span', { class: 'gate-metric-val', style: accessible ? '' : 'color: var(--color-danger)' }, [
+        accessible ? 'Accessible' : 'No Wheelchair Access'
+      ])
+    ]);
 
-    // Card — gate-card--no-wheelchair triggers a distinct CSS treatment
-    const cardClass = [
-      'gate-card',
-      accessible ? 'gate-card--accessible' : 'gate-card--no-wheelchair',
-    ].join(' ');
+    // Progress Bar for Density
+    const progressContainer = el('div', { class: 'progress-container' }, [
+      el('div', { 
+        class: 'progress-bar', 
+        style: `width: ${DENSITY_WIDTH[gate.density] ?? '0%'}; background: ${DENSITY_BG[gate.density] ?? 'var(--text-muted)'};`
+      }, [])
+    ]);
 
+    // Card
+    const cardClass = `gate-card ${accessible ? '' : 'gate-card--no-wheelchair'}`;
     const card = el('article', { class: cardClass, 'data-gate-id': gate.id }, [
       el('header', { class: 'gate-card__header' }, [
-        el('h3', { class: 'gate-card__label' }, [gate.label ?? `Gate ${gate.id}`]),
+        el('h3', { class: 'gate-card__title' }, [gate.label ?? `Gate ${gate.id}`]),
         densityBadge,
       ]),
-      el('div', { class: 'gate-card__zone' }, [`Zone: ${gate.zone}`]),
-      el('div', { class: 'gate-card__stats' }, [
-        el('span', { class: 'gate-stat' }, ['Wait: ', waitEl]),
-        el('span', { class: 'gate-stat' }, [trendEl]),
+      el('div', { class: 'text-muted text-sm mb-2' }, [`Zone: ${gate.zone}`]),
+      progressContainer,
+      el('div', { class: 'gate-card__metrics' }, [
+        waitEl,
+        trendEl,
       ]),
       accessEl,
     ]);
 
     container.appendChild(card);
   }
+
+  refreshIcons();
 }
 
 // ---------------------------------------------------------------------------

@@ -62,9 +62,19 @@ export function el(tag, attrs = {}, children = []) {
  * @param {Node} node - The parent node to empty.
  * @returns {void}
  */
-export function clearChildren(node) {
-  while (node.firstChild) {
-    node.removeChild(node.firstChild);
+export function clearChildren(parent) {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
+}
+
+/**
+ * Re-runs Lucide icon replacement on the page.
+ * Required after dynamically rendering elements with data-lucide attributes.
+ */
+export function refreshIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
   }
 }
 
@@ -81,4 +91,51 @@ export function clearChildren(node) {
  */
 export function setText(node, text) {
   node.textContent = (text == null) ? '' : String(text);
+}
+
+// ---------------------------------------------------------------------------
+// renderMarkdownToDOM
+// ---------------------------------------------------------------------------
+
+/**
+ * Safely parses simple markdown (bold, lists) into DOM elements without innerHTML.
+ * @param {string} text 
+ * @returns {HTMLElement[]} Array of DOM nodes representing the parsed markdown
+ */
+export function renderMarkdownToDOM(text) {
+  if (!text) return [];
+  const lines = text.split('\n');
+  const elements = [];
+  let currentUl = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const isList = line.startsWith('- ') || line.startsWith('* ');
+    const contentText = isList ? line.substring(2) : line;
+
+    // Parse bold text **bold**
+    const parts = contentText.split('**');
+    const inlineNodes = parts.map((part, index) => {
+      // Even indexes are normal text, odd indexes are bold
+      if (index % 2 === 1 && part) {
+        return el('strong', {}, [part]);
+      }
+      return document.createTextNode(part);
+    });
+
+    if (isList) {
+      if (!currentUl) {
+        currentUl = el('ul', { class: 'md-list' }, []);
+        elements.push(currentUl);
+      }
+      currentUl.appendChild(el('li', {}, inlineNodes));
+    } else {
+      currentUl = null; // reset list
+      elements.push(el('p', { class: 'md-p mt-2' }, inlineNodes));
+    }
+  }
+
+  return elements;
 }

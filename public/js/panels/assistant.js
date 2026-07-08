@@ -5,21 +5,24 @@
  * SECURITY: Uses el() and clearChildren() exclusively. No innerHTML.
  */
 
-import { el, clearChildren } from '../utils/dom.js';
+import { el, clearChildren, refreshIcons, renderMarkdownToDOM } from '../utils/dom.js';
+
+const QUICK_ACTIONS = [
+  "What's the status at Gate C?",
+  "Are there any delays?",
+  "Give me a summary of attendance."
+];
 
 // ---------------------------------------------------------------------------
 // renderAssistantPanel
 // ---------------------------------------------------------------------------
 
-/**
- * Renders the assistant UI.
- *
- * @param {HTMLElement} container
- * @param {object} state - { history: [{role, content}], input: string, loading: boolean, error: string|null }
- * @param {object} handlers - { onInput: (value) => void, onSubmit: () => void }
- */
 export function renderAssistantPanel(container, state, handlers = {}) {
   clearChildren(container);
+
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.height = '100%';
 
   // 1. Message List
   const messageList = el('div', {
@@ -29,34 +32,75 @@ export function renderAssistantPanel(container, state, handlers = {}) {
   });
 
   if (state.history.length === 0) {
-    messageList.appendChild(
-      el('p', { class: 'empty-state text-muted' }, ['Ask a question to begin.'])
-    );
+    const emptyState = el('div', { class: 'empty-state flex flex-col items-center justify-center h-full text-muted gap-4 mt-8' }, [
+      el('i', { 'data-lucide': 'message-square', style: 'width: 32px; height: 32px;' }),
+      'How can I help with Stadium Operations today?'
+    ]);
+    
+    const chipsDiv = el('div', { class: 'flex flex-wrap gap-2 justify-center mt-4' }, []);
+    for (const qa of QUICK_ACTIONS) {
+      const chip = el('button', { class: 'badge badge-outline cursor-pointer hover:bg-panel' }, [qa]);
+      chip.addEventListener('click', () => {
+        if (handlers.onInput) handlers.onInput(qa);
+        if (handlers.onSubmit) handlers.onSubmit(qa); // Pass explicitly to avoid state lag
+      });
+      chipsDiv.appendChild(chip);
+    }
+    
+    emptyState.appendChild(chipsDiv);
+    messageList.appendChild(emptyState);
   } else {
     for (const msg of state.history) {
       const isUser = msg.role === 'user';
-      const roleLabel = isUser ? 'You: ' : 'Assistant: ';
       
-      const roleEl = el('strong', { class: 'msg-role-label sr-only-or-visual' }, [roleLabel]);
-      const contentEl = el('span', { class: 'msg-content' }, [msg.content]);
+      const avatarEl = el('div', { class: 'msg-avatar' }, [
+        el('i', { 'data-lucide': isUser ? 'user' : 'bot', style: 'width: 16px; height: 16px;' })
+      ]);
+      
+      const contentEl = el('div', { class: 'msg-content' }, []);
+      if (isUser) {
+        contentEl.appendChild(document.createTextNode(msg.content));
+      } else {
+        const mdNodes = renderMarkdownToDOM(msg.content);
+        for (const node of mdNodes) {
+          contentEl.appendChild(node);
+        }
+      }
       
       messageList.appendChild(
-        el('div', { class: `chat-msg chat-msg--${msg.role}` }, [roleEl, contentEl])
+        el('div', { class: `chat-msg chat-msg--${msg.role}` }, [avatarEl, contentEl])
       );
     }
   }
 
-  // 2. Error message (if any)
+  // Typing Indicator
+  if (state.loading) {
+    const avatarEl = el('div', { class: 'msg-avatar' }, [
+      el('i', { 'data-lucide': 'bot', style: 'width: 16px; height: 16px;' })
+    ]);
+    const indicator = el('div', { class: 'typing-indicator' }, [
+      el('div', { class: 'typing-dot' }, []),
+      el('div', { class: 'typing-dot' }, []),
+      el('div', { class: 'typing-dot' }, [])
+    ]);
+    const contentEl = el('div', { class: 'msg-content' }, [indicator]);
+    
+    messageList.appendChild(
+      el('div', { class: `chat-msg chat-msg--assistant` }, [avatarEl, contentEl])
+    );
+  }
+
+  // 2. Error message
   let errorNode = null;
   if (state.error) {
-    errorNode = el('div', { class: 'error-message', role: 'alert' }, [state.error]);
+    errorNode = el('div', { class: 'error-message text-danger mt-2 mb-2', role: 'alert' }, [state.error]);
   }
 
   // 3. Input area
   const inputEl = el('input', {
     type: 'text',
-    class: 'assistant-input',
-    placeholder: 'Ask about gate status, wait times...',
+    class: 'assistant-input flex-grow',
+    placeholder: 'Ask about operations...',
     value: state.input || '',
   });
   
@@ -68,7 +112,6 @@ export function renderAssistantPanel(container, state, handlers = {}) {
     if (handlers.onInput) handlers.onInput(e.target.value);
   });
 
-  // Allow pressing Enter to submit
   inputEl.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !state.loading && handlers.onSubmit) {
       handlers.onSubmit();
@@ -76,9 +119,11 @@ export function renderAssistantPanel(container, state, handlers = {}) {
   });
 
   const submitBtn = el('button', {
-    class: 'btn-submit',
+    class: 'btn btn-primary',
     'aria-busy': state.loading ? 'true' : 'false',
-  }, [state.loading ? 'Thinking...' : 'Send']);
+  }, [
+    el('i', { 'data-lucide': 'send' })
+  ]);
 
   if (state.loading) {
     submitBtn.setAttribute('disabled', 'true');
@@ -88,7 +133,7 @@ export function renderAssistantPanel(container, state, handlers = {}) {
     if (handlers.onSubmit) handlers.onSubmit();
   });
 
-  const inputGroup = el('div', { class: 'assistant-input-group' }, [inputEl, submitBtn]);
+  const inputGroup = el('div', { class: 'assistant-input-group mt-2 flex gap-2' }, [inputEl, submitBtn]);
 
   // Assemble
   container.appendChild(messageList);
@@ -97,12 +142,17 @@ export function renderAssistantPanel(container, state, handlers = {}) {
   }
   container.appendChild(inputGroup);
 
-  // Auto-focus input on render if not loading, unless this is a test env without real focus
+  // Auto-scroll to bottom
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => {
+      messageList.scrollTop = messageList.scrollHeight;
+    });
+  }
+
+  refreshIcons();
+
   if (!state.loading && document.activeElement !== inputEl) {
-    // Avoid stealing focus aggressively if the user is clicking elsewhere, 
-    // but in a real app, autofocusing here is often expected. We'll leave it
-    // simple and rely on user clicks, except perhaps programmatically focusing
-    // after a submit finishes.
+    // optional autofocus
   }
 }
 

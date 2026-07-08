@@ -40,6 +40,10 @@ export async function callGemini({
   userPrompt,
   jsonMode = false,
 }) {
+  if (!apiKey) {
+    throw new Error('Server configuration error: GEMINI_API_KEY is not set in environment variables.');
+  }
+
   // Build the URL — apiKey goes in the query string per Gemini REST convention.
   // Never include apiKey in any thrown Error message or log statement.
   const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;

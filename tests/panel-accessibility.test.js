@@ -26,7 +26,7 @@ test('accessibility panel: initial render shows button and empty state', () => {
   const container = getContainer();
   renderAccessibilityPanel(container, { loading: false, ranked: null, dispatched: new Set(), error: null });
   
-  const btn = container.querySelector('.btn-generate-accessibility');
+  const btn = container.querySelector('.btn-primary');
   assert.ok(btn);
   assert.equal(btn.disabled, false);
   
@@ -49,12 +49,12 @@ test('accessibility panel: mountAccessibilityPanel renders items in urgencyRank 
   
   mountAccessibilityPanel(container, api);
   
-  const btn = container.querySelector('.btn-generate-accessibility');
+  const btn = container.querySelector('.btn-primary');
   btn.click(); // trigger fetch
   
   await new Promise(r => setTimeout(r, 10)); // wait for API
   
-  const cards = container.querySelectorAll('.accessibility-card');
+  const cards = container.querySelectorAll('.access-req');
   assert.equal(cards.length, 3, 'Should render 3 request cards');
   
   // Verify order matches urgencyRank (1, 2, 3), which means req_a, req_b, req_c
@@ -80,7 +80,7 @@ test('accessibility panel: dispatching an item marks it disabled and updates UI 
   };
   
   mountAccessibilityPanel(container, api);
-  container.querySelector('.btn-generate-accessibility').click();
+  container.querySelector('.btn-primary').click();
   await new Promise(r => setTimeout(r, 10));
   
   assert.equal(fetchCount, 1);
@@ -88,8 +88,8 @@ test('accessibility panel: dispatching an item marks it disabled and updates UI 
   const card1 = container.querySelector('[data-req-id="r1"]');
   const card2 = container.querySelector('[data-req-id="r2"]');
   
-  const dispatchBtn1 = card1.querySelector('.btn-dispatch');
-  const dispatchBtn2 = card2.querySelector('.btn-dispatch');
+  const dispatchBtn1 = card1.querySelector('button');
+  const dispatchBtn2 = card2.querySelector('button');
   
   assert.equal(dispatchBtn1.disabled, false);
   assert.equal(dispatchBtn2.disabled, false);
@@ -101,11 +101,11 @@ test('accessibility panel: dispatching an item marks it disabled and updates UI 
   const updatedCard1 = container.querySelector('[data-req-id="r1"]');
   const updatedCard2 = container.querySelector('[data-req-id="r2"]');
   
-  assert.ok(updatedCard1.classList.contains('accessibility-card--dispatched'), 'Card 1 should get dispatched class');
-  assert.ok(!updatedCard2.classList.contains('accessibility-card--dispatched'), 'Card 2 should NOT get dispatched class');
+  assert.ok(updatedCard1.classList.contains('completed'), 'Card 1 should get completed class');
+  assert.ok(!updatedCard2.classList.contains('completed'), 'Card 2 should NOT get completed class');
   
-  assert.equal(updatedCard1.querySelector('.btn-dispatch').disabled, true, 'Dispatch button 1 should be disabled');
-  assert.equal(updatedCard2.querySelector('.btn-dispatch').disabled, false, 'Dispatch button 2 should stay enabled');
+  assert.equal(updatedCard1.querySelector('button').disabled, true, 'Dispatch button 1 should be disabled');
+  assert.equal(updatedCard2.querySelector('button').disabled, false, 'Dispatch button 2 should stay enabled');
   
   assert.equal(fetchCount, 1, 'Dispatching should not trigger another API fetch');
 });
@@ -117,7 +117,7 @@ test('accessibility panel: error state renders without crashing', async () => {
   };
   
   mountAccessibilityPanel(container, api);
-  const btn = container.querySelector('.btn-generate-accessibility');
+  const btn = container.querySelector('.btn-primary');
   
   await assert.doesNotReject(async () => {
     btn.click();
@@ -129,7 +129,7 @@ test('accessibility panel: error state renders without crashing', async () => {
   assert.equal(errEl.textContent, 'Insights failed');
   
   // Should not have any results
-  const cards = container.querySelectorAll('.accessibility-card');
+  const cards = container.querySelectorAll('.access-req');
   assert.equal(cards.length, 0);
 });
 
@@ -146,7 +146,7 @@ test('accessibility panel: loading state disables button and shows loading text'
   const container = getContainer();
   renderAccessibilityPanel(container, { loading: true, ranked: null, dispatched: new Set(), error: null });
   
-  const btn = container.querySelector('.btn-generate-accessibility');
+  const btn = container.querySelector('.btn-primary');
   assert.ok(btn);
   assert.equal(btn.disabled, true);
   assert.ok(btn.textContent.includes('Analyzing'));

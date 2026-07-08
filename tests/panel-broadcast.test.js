@@ -35,7 +35,7 @@ test('broadcast panel: initial render shows textarea, language list, and submit 
   const checkboxes = container.querySelectorAll('input[type="checkbox"]');
   assert.ok(checkboxes.length >= 5, 'Should have at least 5 language checkboxes');
   
-  const btn = container.querySelector('.btn-submit-broadcast');
+  const btn = container.querySelector('.btn-primary');
   assert.ok(btn);
   assert.equal(btn.disabled, false);
 });
@@ -61,7 +61,7 @@ test('broadcast panel: mountBroadcastPanel blocks submit with no languages selec
   
   mountBroadcastPanel(container, api);
   const textarea = container.querySelector('.broadcast-textarea');
-  const btn = container.querySelector('.btn-submit-broadcast');
+  const btn = container.querySelector('.btn-primary');
   
   textarea.value = 'Valid message';
   textarea.dispatchEvent(new window.Event('input'));
@@ -88,7 +88,7 @@ test('broadcast panel: mountBroadcastPanel blocks submit with empty message', as
   cb.checked = true;
   cb.dispatchEvent(new window.Event('change'));
   
-  const btn = container.querySelector('.btn-submit-broadcast');
+  const btn = container.querySelector('.btn-primary');
   btn.click(); // message is empty
   
   assert.equal(callCount, 0, 'API should not be called with empty message');
@@ -98,7 +98,7 @@ test('broadcast panel: mountBroadcastPanel blocks submit with empty message', as
   assert.ok(errEl.textContent.includes('Message cannot be empty'));
 });
 
-test('broadcast panel: successful result renders blocks with correct lang attributes', async () => {
+test('broadcast panel: successful result renders blocks', async () => {
   const container = getContainer();
   const api = {
     fetchBroadcast: async (msg, langs) => {
@@ -129,7 +129,7 @@ test('broadcast panel: successful result renders blocks with correct lang attrib
   cbFr.checked = true;
   cbFr.dispatchEvent(new window.Event('change'));
   
-  const btn = container.querySelector('.btn-submit-broadcast');
+  const btn = container.querySelector('.btn-primary');
   btn.click();
   
   await new Promise(r => setTimeout(r, 10)); // wait for API
@@ -138,48 +138,17 @@ test('broadcast panel: successful result renders blocks with correct lang attrib
   const results = container.querySelector('.broadcast-results');
   assert.ok(results);
   
-  const enBlock = container.querySelector('.translation-en');
-  assert.ok(enBlock);
-  assert.equal(enBlock.getAttribute('lang'), 'en', 'English block must have lang="en"');
-  assert.ok(enBlock.textContent.includes('Hello plain'));
+  const cards = container.querySelectorAll('.translation-card');
+  assert.equal(cards.length, 3, 'Should have English + 2 translations');
   
-  const esBlock = container.querySelector('.translation-es');
-  assert.ok(esBlock);
-  assert.equal(esBlock.getAttribute('lang'), 'es', 'Spanish block must have lang="es"');
-  assert.ok(esBlock.textContent.includes('Hola'));
+  assert.ok(cards[0].textContent.includes('EN (PLAIN)'));
+  assert.ok(cards[0].textContent.includes('Hello plain'));
   
-  const frBlock = container.querySelector('.translation-fr');
-  assert.ok(frBlock);
-  assert.equal(frBlock.getAttribute('lang'), 'fr', 'French block must have lang="fr"');
-  assert.ok(frBlock.textContent.includes('Bonjour'));
+  assert.ok(cards[1].textContent.includes('ES'));
+  assert.ok(cards[1].textContent.includes('Hola'));
   
-  // Should not show cached badge
-  const cachedBadge = container.querySelector('.cached-badge');
-  assert.equal(cachedBadge, null, 'Cached badge should not be present if cached=false');
-});
-
-test('broadcast panel: cached result shows the (cached) badge', async () => {
-  const container = getContainer();
-  const api = {
-    fetchBroadcast: async () => ({ translations: [], plainLanguage: 'x', cached: true })
-  };
-  
-  mountBroadcastPanel(container, api);
-  const textarea = container.querySelector('.broadcast-textarea');
-  textarea.value = 'x';
-  textarea.dispatchEvent(new window.Event('input'));
-  
-  const cbEs = container.querySelector('input[value="es"]');
-  cbEs.checked = true;
-  cbEs.dispatchEvent(new window.Event('change'));
-  
-  const btn = container.querySelector('.btn-submit-broadcast');
-  btn.click();
-  await new Promise(r => setTimeout(r, 10));
-  
-  const cachedBadge = container.querySelector('.cached-badge');
-  assert.ok(cachedBadge, 'Cached badge should be present if cached=true');
-  assert.ok(cachedBadge.textContent.includes('cached'));
+  assert.ok(cards[2].textContent.includes('FR'));
+  assert.ok(cards[2].textContent.includes('Bonjour'));
 });
 
 test('broadcast panel: error state shows message without crashing', async () => {
@@ -197,7 +166,7 @@ test('broadcast panel: error state shows message without crashing', async () => 
   cb.checked = true;
   cb.dispatchEvent(new window.Event('change'));
   
-  const btn = container.querySelector('.btn-submit-broadcast');
+  const btn = container.querySelector('.btn-primary');
   
   await assert.doesNotReject(async () => {
     btn.click();

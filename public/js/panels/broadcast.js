@@ -5,7 +5,7 @@
  * SECURITY: Uses el() and clearChildren() exclusively. No innerHTML.
  */
 
-import { el, clearChildren } from '../utils/dom.js';
+import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 
 const AVAILABLE_LANGUAGES = [
   { code: 'es', label: 'Spanish' },
@@ -21,13 +21,6 @@ const MAX_MESSAGE_LENGTH = 300;
 // renderBroadcastPanel
 // ---------------------------------------------------------------------------
 
-/**
- * Renders the broadcast panel UI.
- *
- * @param {HTMLElement} container
- * @param {object} state - { message: string, selectedLanguages: string[], loading: boolean, result: object|null, error: string|null }
- * @param {object} handlers - { onInput: Function, onLangToggle: Function, onSubmit: Function }
- */
 export function renderBroadcastPanel(container, state, handlers = {}) {
   clearChildren(container);
 
@@ -36,6 +29,7 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
     class: 'broadcast-textarea',
     placeholder: 'Enter announcement for digital signage...',
     maxlength: MAX_MESSAGE_LENGTH.toString(),
+    rows: '3'
   });
   textarea.value = state.message || '';
   if (state.loading) textarea.setAttribute('disabled', 'true');
@@ -45,19 +39,17 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
   });
 
   const charCount = state.message.length;
-  const counterEl = el('div', { class: 'broadcast-counter text-muted' }, [
+  const counterEl = el('div', { class: 'broadcast-counter' }, [
     `${charCount} / ${MAX_MESSAGE_LENGTH}`
   ]);
 
-  const inputGroup = el('div', { class: 'broadcast-input-group' }, [
-    el('label', {}, ['Announcement Text:']),
+  const inputGroup = el('div', { class: 'broadcast-input-group mt-2' }, [
     textarea,
     counterEl
   ]);
 
   // 2. Language Selection
-  const langTitle = el('strong', { class: 'broadcast-lang-title' }, ['Translate to:']);
-  const langList = el('div', { class: 'broadcast-lang-list' }, []);
+  const langList = el('div', { class: 'broadcast-lang-list flex gap-2 flex-wrap mb-4' }, []);
 
   for (const lang of AVAILABLE_LANGUAGES) {
     const isChecked = state.selectedLanguages.includes(lang.code);
@@ -65,7 +57,8 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
     const checkbox = el('input', {
       type: 'checkbox',
       value: lang.code,
-      id: `lang-cb-${lang.code}`
+      id: `lang-cb-${lang.code}`,
+      style: 'display:none;'
     });
     if (isChecked) checkbox.setAttribute('checked', 'true');
     if (state.loading) checkbox.setAttribute('disabled', 'true');
@@ -74,17 +67,22 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
       if (handlers.onLangToggle) handlers.onLangToggle(lang.code, e.target.checked);
     });
 
-    const label = el('label', { for: `lang-cb-${lang.code}` }, [checkbox, ` ${lang.label}`]);
+    const badgeClass = isChecked ? 'badge-info' : 'badge-outline';
+    const label = el('label', { for: `lang-cb-${lang.code}`, class: `badge ${badgeClass} cursor-pointer` }, [
+      checkbox,
+      lang.label
+    ]);
     langList.appendChild(label);
   }
 
-  const langGroup = el('div', { class: 'broadcast-lang-group' }, [langTitle, langList]);
-
   // 3. Submit Button
   const submitBtn = el('button', {
-    class: 'btn-submit-broadcast',
+    class: 'btn btn-primary w-full justify-center',
     'aria-busy': state.loading ? 'true' : 'false',
-  }, [state.loading ? 'Translating...' : 'Generate Broadcast']);
+  }, [
+    el('i', { 'data-lucide': 'radio' }),
+    state.loading ? 'Translating...' : 'Generate Translations'
+  ]);
   
   if (state.loading) submitBtn.setAttribute('disabled', 'true');
   submitBtn.addEventListener('click', () => {
@@ -94,50 +92,46 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
   // 4. Error state
   let errorNode = null;
   if (state.error) {
-    errorNode = el('div', { class: 'error-message', role: 'alert' }, [state.error]);
+    errorNode = el('div', { class: 'error-message text-danger mt-2', role: 'alert' }, [state.error]);
   }
 
   // 5. Result section
   let resultGroup = null;
-  if (state.result) {
-    resultGroup = el('div', { class: 'broadcast-results', 'aria-live': 'polite' }, []);
+  if (state.loading && !state.result) {
+    resultGroup = el('div', { class: 'skeleton mt-4', style: 'height:100px;' }, []);
+  } else if (state.result) {
+    resultGroup = el('div', { class: 'broadcast-results mt-4', 'aria-live': 'polite' }, []);
     
-    const headerRow = el('div', { class: 'results-header' }, [
-      el('h3', {}, ['Generated Broadcasts']),
-    ]);
-    
-    if (state.result.cached) {
-      headerRow.appendChild(el('span', { class: 'cached-badge text-muted' }, [' (cached)']));
-    }
-    resultGroup.appendChild(headerRow);
-
-    // Plain English block
-    const plainBlock = el('div', { class: 'translation-block translation-en', lang: 'en' }, [
-      el('strong', {}, ['English (Plain Language)']),
-      el('p', {}, [state.result.plainLanguage])
-    ]);
-    resultGroup.appendChild(plainBlock);
-
     // Translated blocks
-    for (const t of state.result.translations) {
-      const tBlock = el('div', { class: `translation-block translation-${t.language}`, lang: t.language }, [
-        el('strong', {}, [t.language.toUpperCase()]),
-        el('p', {}, [t.text])
+    const allTranslations = [
+      { language: 'en (Plain)', text: state.result.plainLanguage },
+      ...state.result.translations
+    ];
+
+    for (const t of allTranslations) {
+      const tBlock = el('div', { class: `translation-card` }, [
+        el('div', { class: 'translation-card__header' }, [
+          t.language.toUpperCase(),
+          el('i', { 'data-lucide': 'copy', class: 'cursor-pointer' })
+        ]),
+        t.text
       ]);
       resultGroup.appendChild(tBlock);
     }
   }
 
   // Assemble
-  const controlsDiv = el('div', { class: 'broadcast-controls' }, [
+  const controlsDiv = el('div', {}, [
     inputGroup,
-    langGroup,
+    langList,
     submitBtn
   ]);
 
   container.appendChild(controlsDiv);
   if (errorNode) container.appendChild(errorNode);
   if (resultGroup) container.appendChild(resultGroup);
+
+  refreshIcons();
 }
 
 // ---------------------------------------------------------------------------
