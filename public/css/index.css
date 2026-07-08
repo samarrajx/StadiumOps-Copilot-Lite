@@ -124,17 +124,36 @@ body {
 
 .app-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  /* Use min(100%, 320px) to prevent horizontal overflow on screens < 320px */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 1.5rem;
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+}
+@media (max-width: 639px) {
+  .app-grid {
+    padding: 1rem;
+    gap: 1rem;
+  }
 }
 @media (min-width: 1024px) {
   .app-grid {
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: auto auto;
   }
+}
+
+/* ---------------------------------------------------------
+   Accessibility & Focus
+--------------------------------------------------------- */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------
@@ -230,6 +249,120 @@ input:focus, textarea:focus {
 }
 
 /* ---------------------------------------------------------
+   Status Bar
+--------------------------------------------------------- */
+.panel-status {
+  grid-column: 1 / -1;
+  background: rgba(15, 23, 42, 0.7);
+  border-left: 4px solid var(--accent);
+}
+
+.status-bar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1.5rem;
+}
+
+.status-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.status-card__header {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.25rem;
+}
+
+/* Match Info */
+.match-teams {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.match-stage {
+  margin-bottom: 0.5rem;
+}
+.match-status-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+/* Weather Info */
+.weather-main {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.weather-advisory {
+  font-size: 0.9rem;
+  color: var(--medium);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Transit Info */
+.transit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.transit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+.transit-name {
+  display: flex;
+  flex-direction: column;
+}
+.transit-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.transit-state-badge {
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.transit-state--on-time {
+  color: var(--low);
+  background: rgba(16, 185, 129, 0.15);
+}
+.transit-state--delayed {
+  color: var(--medium);
+  background: rgba(245, 158, 11, 0.15);
+}
+.transit-state--disrupted {
+  color: var(--high);
+  background: rgba(244, 63, 94, 0.15);
+}
+.transit-eta {
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+/* ---------------------------------------------------------
    Gate Grid Micro-animations
 --------------------------------------------------------- */
 .gate-card {
@@ -240,12 +373,58 @@ input:focus, textarea:focus {
   border-radius: 8px;
   transition: background 0.2s ease;
 }
-.gate-card:hover {
-  background: rgba(255, 255, 255, 0.06);
+.gate-card:hover { background: rgba(255, 255, 255, 0.06); }
+.gate-card--no-wheelchair { opacity: 0.4; }
+.gate-card--accessible { }
+
+.gate-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.gate-card__label {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.gate-card__zone {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.gate-card__stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.gate-stat { font-size: 0.9rem; }
+.gate-wait { font-weight: 600; color: var(--text-bright); }
+
+.gate-trend { font-weight: 600; }
+.gate-trend--rising { color: var(--high); }
+.gate-trend--falling { color: var(--low); }
+.gate-trend--stable { color: var(--medium); }
+
+.gate-access {
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 600;
+}
+.gate-access--ok {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--low);
+}
+.gate-access--no-wheelchair {
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--high);
+  border: 1px dashed rgba(244, 63, 94, 0.4);
 }
 
 /* Neon Density Badges */
-.density-badge {
+.gate-density-badge {
   font-weight: 700;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
@@ -277,11 +456,20 @@ input:focus, textarea:focus {
   100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
 }
 
-.gate-not-accessible { opacity: 0.4; }
-
 /* ---------------------------------------------------------
    Accessibility Panel
 --------------------------------------------------------- */
+.panel-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.accessibility-insights {
+  display: flex;
+  flex-direction: column;
+}
+
 .accessibility-card {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-light);
@@ -300,19 +488,61 @@ input:focus, textarea:focus {
   filter: grayscale(100%);
 }
 
+.accessibility-card__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
 .accessibility-badge {
   font-weight: 600;
   color: var(--text-bright);
 }
 .accessibility-location { margin-left: 0.5rem; color: var(--accent); }
 .accessibility-duration { margin-left: 0.5rem; font-size: 0.85em; opacity: 0.8; }
+.accessibility-note { margin: 0.25rem 0; font-size: 0.95rem; }
 .accessibility-card__action-row { margin: 0.75rem 0; }
 .accessibility-card__footer { margin-top: 0.5rem; }
+
+.btn-generate-accessibility, .btn-dispatch, .btn-generate, .btn-submit, .btn-submit-broadcast {
+  /* Reuse button styling implicitly through global button selector but allow specific overrides */
+}
+
+/* ---------------------------------------------------------
+   Briefing Panel
+--------------------------------------------------------- */
+.briefing-content {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  min-height: 100px;
+}
+.briefing-text {
+  margin: 0;
+  line-height: 1.6;
+}
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}
+.loading-indicator {
+  text-align: center;
+  color: var(--accent);
+  font-weight: 600;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
 /* ---------------------------------------------------------
    Assistant Chat
 --------------------------------------------------------- */
-.message-list {
+.assistant-history {
   max-height: 350px;
   overflow-y: auto;
   display: flex;
@@ -322,34 +552,43 @@ input:focus, textarea:focus {
   padding-right: 0.5rem;
 }
 /* Scrollbar */
-.message-list::-webkit-scrollbar { width: 6px; }
-.message-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
-.message-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+.assistant-history::-webkit-scrollbar { width: 6px; }
+.assistant-history::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+.assistant-history::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
-.message { 
+.chat-msg { 
   padding: 0.85rem 1rem; 
   border-radius: 12px;
   max-width: 90%;
   line-height: 1.4;
   position: relative;
 }
-.message-user { 
+.chat-msg--user { 
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
   border: 1px solid rgba(59, 130, 246, 0.3);
   align-self: flex-end; 
   border-bottom-right-radius: 4px;
 }
-.message-assistant { 
+.chat-msg--assistant { 
   background: rgba(255, 255, 255, 0.05); 
   border: 1px solid var(--border-light); 
   align-self: flex-start; 
   border-bottom-left-radius: 4px;
 }
-.assistant-controls {
+.msg-role-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+.msg-content {
+  color: var(--text-bright);
+}
+.assistant-input-group {
   display: flex;
   gap: 0.5rem;
 }
-.assistant-controls input {
+.assistant-input-group .assistant-input {
   margin-bottom: 0;
   flex-grow: 1;
 }
@@ -357,22 +596,43 @@ input:focus, textarea:focus {
 /* ---------------------------------------------------------
    Broadcast
 --------------------------------------------------------- */
+.broadcast-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.broadcast-input-group {
+  display: flex;
+  flex-direction: column;
+}
+.broadcast-input-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
 .broadcast-textarea { 
   height: 120px; 
   resize: vertical; 
 }
+.broadcast-counter {
+  text-align: right;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+}
+
 .broadcast-lang-group {
   background: rgba(255,255,255,0.02);
   padding: 1rem;
   border-radius: 6px;
   border: 1px solid var(--border-light);
-  margin-bottom: 1rem;
+}
+.broadcast-lang-title {
+  display: block;
+  margin-bottom: 0.5rem;
 }
 .broadcast-lang-list {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-top: 0.5rem;
 }
 .broadcast-lang-list label {
   display: flex;
@@ -385,6 +645,27 @@ input:focus, textarea:focus {
 }
 .broadcast-lang-list label:hover {
   background: rgba(255,255,255,0.05);
+}
+
+.broadcast-results {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+}
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.results-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.cached-badge {
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 .translation-block {
   background: rgba(0, 0, 0, 0.3);
@@ -399,3 +680,4 @@ input:focus, textarea:focus {
   color: var(--accent);
   font-size: 0.85rem;
 }
+
