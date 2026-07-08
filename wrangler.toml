@@ -1,0 +1,21 @@
+name = "stadiumops-copilot-lite"
+pages_build_output_dir = "public"
+
+# ----------------------------------------------------------------------------
+# Environment Variables (non-secret)
+# Uncomment and set values here for local dev, or via the Cloudflare dashboard
+# for production deployments.
+# ----------------------------------------------------------------------------
+# [vars]
+# GEMINI_MODEL = "gemini-2.5-flash"
+
+# ----------------------------------------------------------------------------
+# IMPORTANT — Secret values (GEMINI_API_KEY)
+# NEVER commit API keys or secrets to this file.
+# Set the Gemini API key as a Cloudflare Pages secret using:
+#
+#   wrangler pages secret put GEMINI_API_KEY
+#
+# This stores it encrypted in Cloudflare and makes it available to
+# /functions at runtime via `env.GEMINI_API_KEY` — never in client-side code.
+# ----------------------------------------------------------------------------

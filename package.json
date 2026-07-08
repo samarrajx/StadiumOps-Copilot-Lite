@@ -1,0 +1,12 @@
+{
+  "name": "stadiumops-copilot-lite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/",
+    "dev": "npx wrangler pages dev public --compatibility-date=2026-01-01"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}

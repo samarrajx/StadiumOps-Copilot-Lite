@@ -1,0 +1,165 @@
+/* 
+ * Minimal dark-theme CSS for StadiumOps Copilot
+ */
+
+:root {
+  --bg-color: #0f172a;
+  --panel-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #3b82f6;
+  --border: #334155;
+  --error: #ef4444;
+  
+  --low: #22c55e;
+  --medium: #f59e0b;
+  --high: #ef4444;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: white;
+  padding: 8px;
+  z-index: 100;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+.app-header {
+  padding: 1rem 2rem;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Utilities */
+.text-muted {
+  color: var(--text-muted);
+}
+.error-message {
+  color: var(--error);
+  padding: 0.5rem;
+  background: #451a1a;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input, textarea {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid var(--border);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+/* Gate Grid */
+.gate-card {
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+.density-badge.density-low { color: var(--low); }
+.density-badge.density-medium { color: var(--medium); }
+.density-badge.density-high { color: var(--high); }
+.gate-not-accessible { opacity: 0.6; }
+
+/* Accessibility */
+.accessibility-card {
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+.accessibility-card--dispatched {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+/* Assistant */
+.message-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.message { padding: 0.75rem; border-radius: 4px; }
+.message-user { background: #334155; align-self: flex-end; }
+.message-assistant { background: #1e293b; border: 1px solid var(--border); align-self: flex-start; }
+
+/* Broadcast */
+.broadcast-textarea { height: 100px; resize: vertical; }
+.translation-block {
+  background: #334155;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
