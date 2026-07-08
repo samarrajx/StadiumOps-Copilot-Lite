@@ -19,6 +19,25 @@ A serverless, AI-powered control-room dashboard for FIFA World Cup 2026 venue op
 | **PS7. Code Quality & Modularity** | Dependency-injected handlers, pure pure functions for state/validation, minimal pub-sub architecture without bloated external frameworks. |
 | **PS8. Performance & Efficiency** | Caching of translations via a module-level Map, efficient client-side rendering (only re-rendering on state changes), and non-blocking PWA Service Worker shell caching. |
 | **PS9. Enterprise UI/UX** | Mission-critical design using a refined 12-column CSS grid, Lucide SVG icons, subtle glassmorphism frost overlays, and responsive `.skeleton` loaders. |
+| **PS10. Executive KPI Strip** | **Status Bar**: A top-level panel displaying real-time operational signals (Match Time, Weather conditions, and Transit status) to provide immediate situational awareness. |
+
+## Project Structure
+
+```
+.
+├── functions/             # Cloudflare Pages Functions (Backend API)
+│   ├── _lib/              # Shared pure functions (gemini wrappers, rate limits, prompts)
+│   └── api/               # Endpoint route handlers (e.g., accessibility.js, briefing.js)
+├── public/                # Static Frontend (Vanilla JS, CSS, HTML)
+│   ├── css/               # Enterprise SaaS styling (index.css)
+│   ├── js/                # App logic
+│   │   ├── panels/        # UI component logic (gateGrid, assistant, statusBar, etc.)
+│   │   └── utils/         # DOM helpers, store, validators
+│   └── index.html         # Main dashboard layout
+├── tests/                 # 225 native node:test JSDOM tests covering both backend and frontend
+├── .dev.vars              # Local development secrets (Not committed)
+└── package.json           # Scripts and dependencies
+```
 
 ## How It Works
 
