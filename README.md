@@ -19,7 +19,13 @@ Our chosen vertical is Venue Operations & Crowd Safety for Tournament Organizers
 
 ## Vertical & Persona
 **Persona**: Tournament Organizer / Venue Operations Staff
-**Why**: Venue operators during mega-events like the World Cup need to process a high volume of rapidly changing telemetry (crowd density, wait times, weather, transit) to make split-second safety and routing decisions. They do not have time to synthesize raw data or write manual multi-lingual translations. This prototype gives them an intelligent "copilot" that instantly understands venue conditions and recommends actions, keeping fans safe and operations smooth.
+**Why**: Venue operators during mega-events like the World Cup need to process a high volume of rapidly changing telemetry (crowd density, wait times, weather, transit) to make split-second safety and routing decisions. They do not have time to synthesize raw data or write manual multi-lingual translations. This prototype gives them an intelligent "copilot" that instantly understands venue conditions and recommends actions, keeping fans safe and operations smooth. In the context of the FIFA World Cup 2026—the first 48-team tournament, hosted across 16 cities in three countries (USA, Mexico, Canada)—venue operators face larger crowds, more diverse international fan languages, and more logistically complex transport handoffs than any prior tournament, which is the real-world pressure this tool is designed for.
+
+### Example: Context-Driven Decision
+Suppose it is the pre-match entry surge. The live signals system reports that Gate D (South Stand) has high density with a 25-minute wait time, while Gate C (East Stand) has a shorter 18-minute wait but is flagged in the venue schema as non-wheelchair-accessible. Concurrently, Gate B has a 15-minute wait and is fully accessible. When the operator queries the system for routing, the copilot reads these active telemetry points. It recommends directing general incoming traffic to Gate B due to the lower queue time, but specifically flags that Gate C should be avoided for mobility-assisted routing, designating Gate B as the closest accessible entry point.
+
+## Why Generative AI
+Unlike rules-based systems, a stadium control room deals with highly unstructured inputs, such as free-text operator questions and custom broadcast announcements, that lack a fixed schema. Translating these messages into multiple languages on the fly requires context-aware, fluent rewriting that preserves safety intent, which simple lookup tables cannot achieve. Furthermore, situation briefings require synthesizing multiple numeric signals—such as gate queue times, transit delays, and weather advisories—into a prioritized narrative that a supervisor can digest in seconds. These synthesis, translation, and natural language reasoning tasks are areas where generative AI excels and hardcoded logical gates fall short.
 
 ## Approach & Logic
 
