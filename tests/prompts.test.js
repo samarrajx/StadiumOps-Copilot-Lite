@@ -244,3 +244,16 @@ test('buildAccessibilityPrompt: warns model not to invent new ids', () => {
     'prompt must instruct model not to invent new request ids',
   );
 });
+
+test('renderContextSummary: includes sustainability signals when present', () => {
+  const signalsWithSub = {
+    ...SAMPLE_SIGNALS,
+    sustainability: {
+      wasteDiversionRatePercent: 85,
+      waterRefillStationsActive: '12 of 12 active'
+    }
+  };
+  const summary = renderContextSummary(signalsWithSub);
+  assert.ok(summary.includes('Waste Diversion Rate: 85%'), 'expected waste diversion rate in summary');
+  assert.ok(summary.includes('Water Refill Stations Active: 12 of 12 active'), 'expected refill stations in summary');
+});

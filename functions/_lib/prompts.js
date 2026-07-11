@@ -24,7 +24,7 @@
  * @returns {string}
  */
 export function renderContextSummary(signals) {
-  const { match, weather, gates, transit, accessibilityRequests } = signals;
+  const { match, weather, gates, transit, accessibilityRequests, sustainability } = signals;
 
   const gateLines = gates.map(
     (g) =>
@@ -45,6 +45,16 @@ export function renderContextSummary(signals) {
             ` | open ${r.minutesOpen} min | status=${r.status}`,
         );
 
+  const sustainabilityLines = sustainability
+    ? [
+        `  Waste Diversion Rate: ${sustainability.wasteDiversionRatePercent}%`,
+        `  Water Refill Stations Active: ${sustainability.waterRefillStationsActive}`,
+      ]
+    : [
+        '  Waste Diversion Rate: unknown',
+        '  Water Refill Stations Active: unknown',
+      ];
+
   return [
     '=== LIVE OPERATIONAL CONTEXT ===',
     `Match: ${match.homeTeam} vs ${match.awayTeam} | ${match.competitionStage}`,
@@ -63,6 +73,9 @@ export function renderContextSummary(signals) {
     '',
     `--- ACCESSIBILITY REQUESTS (${accessibilityRequests.length} open) ---`,
     ...requestLines,
+    '',
+    '--- SUSTAINABILITY ---',
+    ...sustainabilityLines,
     '',
     '=== END CONTEXT ===',
   ].join('\n');
@@ -161,6 +174,8 @@ export function buildBriefingPrompt(signals) {
     '  5. Only if a transit service is disrupted AND a shuttle is delayed, briefly',
     '     encourage fans to use rail or bus instead (sustainability nudge); omit',
     '     this point entirely if services are running normally.',
+    '  6. Any sustainability alert: if the waste diversion rate drops below 70%, advise',
+    '     pre-positioning recycling guides to assist fans at waste bins.',
     '',
     'Write in flowing prose — no bullet points, no headers, no markdown formatting.',
     'Do not add any information not present in the context above.',

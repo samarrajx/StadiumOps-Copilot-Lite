@@ -6,13 +6,11 @@
  * Returns: { answer: string }
  */
 
-import { generateLiveSignals } from '../../public/js/liveSignals.js';
 import { buildAssistantPrompt } from '../_lib/prompts.js';
 import { callGemini as _callGemini, getGeminiModel } from '../_lib/gemini.js';
 import { validateQuestion, validateConversationHistory } from '../../public/js/utils/validators.js';
 import {
-  applyRateLimit, makeCorsHeaders, jsonResponse, parseJsonBody,
-  getMatchStartMs, SYSTEM_PROMPT,
+  jsonResponse, SYSTEM_PROMPT, handleRouteStandard, parseJsonBody,
 } from '../_lib/guard.js';
 import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS } from '../_lib/constants.js';
 
@@ -31,12 +29,17 @@ export function createHandler({
 } = {}) {
   return async function handler(context) {
     const { request, env } = context;
-    const cors = makeCorsHeaders(request);
-    const nowMs = Date.now();
 
-    // 1. Rate limit
-    const limitRes = applyRateLimit(_rateLimitStore, request, _maxRequests, _windowMs, nowMs);
-    if (limitRes) return limitRes;
+    // 1. Run standard rate limit, CORS, and signals generation
+    const std = handleRouteStandard({
+      request,
+      rateLimitStore: _rateLimitStore,
+      maxRequests: _maxRequests,
+      windowMs: _windowMs,
+      nowMs: Date.now(),
+    });
+    if (!std.ok) return std.errorResponse;
+    const { signals, cors } = std;
 
     // 2. Parse + validate body
     const parsed = await parseJsonBody(request);
@@ -50,9 +53,6 @@ export function createHandler({
 
     const hv = validateConversationHistory(history);
     if (!hv.valid) return jsonResponse({ error: hv.error }, 400, cors);
-
-    // 3. Re-derive live signals server-side
-    const signals = generateLiveSignals(nowMs, getMatchStartMs(nowMs));
 
     // 4. Build prompt and call Gemini
     // question is passed explicitly labeled as untrusted inside buildAssistantPrompt

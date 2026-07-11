@@ -12,7 +12,7 @@ import { callGemini as _callGemini, getGeminiModel } from '../_lib/gemini.js';
 import { validateBroadcastMessage, validateLanguageCodes } from '../../public/js/utils/validators.js';
 import { makeCacheKey, getCached, setCached } from '../_lib/cache.js';
 import {
-  applyRateLimit, makeCorsHeaders, jsonResponse, parseJsonBody, SYSTEM_PROMPT,
+  jsonResponse, SYSTEM_PROMPT, handleRouteStandard, parseJsonBody,
 } from '../_lib/guard.js';
 import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS, BROADCAST_CACHE_TTL_MS } from '../_lib/constants.js';
 
@@ -47,12 +47,18 @@ export function createHandler({
 } = {}) {
   return async function handler(context) {
     const { request, env } = context;
-    const cors = makeCorsHeaders(request);
     const nowMs = Date.now();
 
-    // 1. Rate limit
-    const limitRes = applyRateLimit(_rateLimitStore, request, _maxRequests, _windowMs, nowMs);
-    if (limitRes) return limitRes;
+    // 1. Run standard rate limit, CORS, and signals generation
+    const std = handleRouteStandard({
+      request,
+      rateLimitStore: _rateLimitStore,
+      maxRequests: _maxRequests,
+      windowMs: _windowMs,
+      nowMs,
+    });
+    if (!std.ok) return std.errorResponse;
+    const { cors } = std;
 
     // 2. Parse + validate body
     const parsed = await parseJsonBody(request);

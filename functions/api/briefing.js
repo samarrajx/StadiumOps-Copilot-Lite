@@ -6,11 +6,10 @@
  * Returns: { briefing: string }
  */
 
-import { generateLiveSignals } from '../../public/js/liveSignals.js';
 import { buildBriefingPrompt } from '../_lib/prompts.js';
 import { callGemini as _callGemini, getGeminiModel } from '../_lib/gemini.js';
 import {
-  applyRateLimit, makeCorsHeaders, jsonResponse, getMatchStartMs, SYSTEM_PROMPT,
+  jsonResponse, SYSTEM_PROMPT, handleRouteStandard,
 } from '../_lib/guard.js';
 import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS } from '../_lib/constants.js';
 
@@ -30,15 +29,17 @@ export function createHandler({
 } = {}) {
   return async function handler(context) {
     const { request, env } = context;
-    const cors = makeCorsHeaders(request);
-    const nowMs = Date.now();
 
-    // 1. Rate limit
-    const limitRes = applyRateLimit(_rateLimitStore, request, _maxRequests, _windowMs, nowMs);
-    if (limitRes) return limitRes;
-
-    // 2. Re-derive live signals server-side (client body intentionally unused)
-    const signals = generateLiveSignals(nowMs, getMatchStartMs(nowMs));
+    // 1. Run standard rate limit, CORS, and signals generation
+    const std = handleRouteStandard({
+      request,
+      rateLimitStore: _rateLimitStore,
+      maxRequests: _maxRequests,
+      windowMs: _windowMs,
+      nowMs: Date.now(),
+    });
+    if (!std.ok) return std.errorResponse;
+    const { signals, cors } = std;
 
     // 3. Build prompt and call Gemini
     let briefing;

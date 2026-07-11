@@ -6,6 +6,7 @@
 
 import { checkRateLimit, getClientKey } from './rateLimit.js';
 import { MATCH_START_OFFSET_MS } from './constants.js';
+import { generateLiveSignals } from '../../public/js/liveSignals.js';
 
 /**
  * Reads the Origin header from a request (for same-origin CORS).
@@ -102,3 +103,30 @@ export function getMatchStartMs(nowMs = Date.now()) {
 export const SYSTEM_PROMPT =
   'You are a FIFA World Cup 2026 stadium operations AI assistant. ' +
   'Follow all instructions provided in the user message precisely.';
+
+/**
+ * Standard route handling setup: rate limit validation and signal generation.
+ *
+ * @param {object}   options
+ * @param {Request}  options.request
+ * @param {Map}      options.rateLimitStore
+ * @param {number}   options.maxRequests
+ * @param {number}   options.windowMs
+ * @param {number}   options.nowMs
+ * @returns {object} { ok: boolean, errorResponse?: Response, signals?: object, cors?: object }
+ */
+export function handleRouteStandard({
+  request,
+  rateLimitStore,
+  maxRequests,
+  windowMs,
+  nowMs,
+}) {
+  const cors = makeCorsHeaders(request);
+  const limitRes = applyRateLimit(rateLimitStore, request, maxRequests, windowMs, nowMs);
+  if (limitRes) {
+    return { ok: false, errorResponse: limitRes };
+  }
+  const signals = generateLiveSignals(nowMs, getMatchStartMs(nowMs));
+  return { ok: true, signals, cors };
+}
