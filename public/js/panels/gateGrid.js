@@ -45,6 +45,19 @@ const TREND_LABEL = {
 // renderGateGrid
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the gate status grid into `container`, including the AI routing
+ * recommendation section and one card per gate in `signals.gates`.
+ *
+ * @param {HTMLElement} container        - DOM node to render into.
+ * @param {object|null} signals          - Live signals snapshot (signals.gates array);
+ *                                         pass null to render an empty grid.
+ * @param {object}      [aiConfig={}]    - AI recommendation display config.
+ * @param {{ status: 'idle'|'loading'|'error'|'success', data: string|null, error: string|null }} [aiConfig.recState]
+ *   - Current recommendation state.
+ * @param {Function}    [aiConfig.onRecommend] - Callback fired when the AI button is clicked.
+ * @returns {void}
+ */
 export function renderGateGrid(container, signals, aiConfig = {}) {
   clearChildren(container);
 

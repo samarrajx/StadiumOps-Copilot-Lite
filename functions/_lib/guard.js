@@ -5,6 +5,7 @@
  */
 
 import { checkRateLimit, getClientKey } from './rateLimit.js';
+import { MATCH_START_OFFSET_MS } from './constants.js';
 
 /**
  * Reads the Origin header from a request (for same-origin CORS).
@@ -80,11 +81,19 @@ export async function parseJsonBody(request) {
   }
 }
 
-// ASSUMPTION: Match start is derived as 30 min before request time so the demo
-// is always in the "first-half" phase. Production would fetch this from a
-// fixture/schedule API keyed to the actual match.
+/**
+ * Derives a demo match-start timestamp from the current time.
+ * Returns a moment 30 minutes before `nowMs` so the app prototype is always
+ * in the "first-half" phase regardless of when it is loaded.
+ *
+ * ASSUMPTION: Production would fetch the real kick-off time from a fixture
+ * or schedule API keyed to the actual match.
+ *
+ * @param {number} [nowMs=Date.now()] - Current timestamp in milliseconds.
+ * @returns {number} Match start timestamp in milliseconds.
+ */
 export function getMatchStartMs(nowMs = Date.now()) {
-  return nowMs - 30 * 60 * 1000;
+  return nowMs - MATCH_START_OFFSET_MS;
 }
 
 // Common Gemini system prompt used by all handlers.

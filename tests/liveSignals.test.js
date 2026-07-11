@@ -13,11 +13,12 @@
  *   - Transit array always has ≥ 3 entries
  *   - Gate densities increase during crush vs. quiet phases
  *   - Wait times increase during crush and egress vs. in-play
+ *   - sustainability field present, correctly typed, within bounds, fluctuates by phase
  */
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateLiveSignals, GATE_IDS } from '../public/js/liveSignals.js';
+import { generateLiveSignals, GATE_IDS, WATER_REFILL_TOTAL } from '../public/js/liveSignals.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -275,4 +276,75 @@ test('all active accessibilityRequest entries have valid field types and values'
     assert.ok(validStatus.has(req.status),                               `status invalid: ${req.status}`);
     assert.ok(typeof req.note       === 'string' && req.note.length > 0, `note invalid: ${req.note}`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// Test 23: sustainability field is present with correct types
+// ---------------------------------------------------------------------------
+
+test('sustainability: field is present on every generateLiveSignals() result', () => {
+  for (const e of [-90, -30, 5, 30, 50, 70, 100]) {
+    const { sustainability } = signalAt(e);
+    assert.ok(
+      sustainability !== null && typeof sustainability === 'object',
+      `sustainability missing or not an object at elapsed ${e}`,
+    );
+    assert.ok(
+      typeof sustainability.wasteDiversionRatePercent === 'number',
+      `wasteDiversionRatePercent not a number at elapsed ${e}`,
+    );
+    assert.ok(
+      typeof sustainability.waterRefillStationsActive === 'number',
+      `waterRefillStationsActive not a number at elapsed ${e}`,
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Test 24: sustainability values stay within expected bounds
+// ---------------------------------------------------------------------------
+
+test('sustainability: wasteDiversionRatePercent is between 60 and 85 across all phases', () => {
+  for (const e of [-90, -30, 5, 30, 50, 70, 100]) {
+    const { wasteDiversionRatePercent } = signalAt(e).sustainability;
+    assert.ok(
+      wasteDiversionRatePercent >= 60 && wasteDiversionRatePercent <= 85,
+      `wasteDiversionRatePercent ${wasteDiversionRatePercent} out of range [60,85] at elapsed ${e}`,
+    );
+  }
+});
+
+test('sustainability: waterRefillStationsActive is between 0 and WATER_REFILL_TOTAL', () => {
+  for (const e of [-90, -30, 5, 30, 50, 70, 100]) {
+    const { waterRefillStationsActive } = signalAt(e).sustainability;
+    assert.ok(
+      waterRefillStationsActive >= 0 && waterRefillStationsActive <= WATER_REFILL_TOTAL,
+      `waterRefillStationsActive ${waterRefillStationsActive} out of range [0,${WATER_REFILL_TOTAL}] at elapsed ${e}`,
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Test 25: sustainability fluctuates realistically with phase
+// ---------------------------------------------------------------------------
+
+test('sustainability: wasteDiversionRatePercent is lower during crush than quiet first half', () => {
+  // Crush = peak contamination pressure → diversion dips
+  // First half = crowd inside, bins processed → diversion peaks
+  const crushRate     = signalAt(5).sustainability.wasteDiversionRatePercent;
+  const firstHalfRate = signalAt(30).sustainability.wasteDiversionRatePercent;
+  assert.ok(
+    crushRate < firstHalfRate,
+    `crush rate (${crushRate}%) should be lower than first-half rate (${firstHalfRate}%)`,
+  );
+});
+
+test('sustainability: waterRefillStationsActive is lower during crush than quiet phases', () => {
+  // 2 stations cycling offline during crush for maintenance
+  const crushActive     = signalAt(5).sustainability.waterRefillStationsActive;
+  const firstHalfActive = signalAt(30).sustainability.waterRefillStationsActive;
+  assert.ok(
+    crushActive < firstHalfActive,
+    `crush stations (${crushActive}) should be fewer than first-half stations (${firstHalfActive})`,
+  );
 });

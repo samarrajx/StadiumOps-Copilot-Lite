@@ -17,6 +17,19 @@ const QUICK_ACTIONS = [
 // renderAssistantPanel
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the Decision Assistant chat panel into `container`.
+ * Displays the conversation history, a typing indicator when loading,
+ * an optional error banner, and the text input/submit row.
+ *
+ * @param {HTMLElement} container                           - DOM node to render into.
+ * @param {{ history: Array<{role:string,content:string}>, input: string, loading: boolean, error: string|null }} state
+ *   - Current panel state.
+ * @param {object}      [handlers={}]                       - Event handler callbacks.
+ * @param {Function}    [handlers.onInput]                  - Called with the new string value on every keystroke.
+ * @param {Function}    [handlers.onSubmit]                 - Called (optionally with a prefill string) on send.
+ * @returns {void}
+ */
 export function renderAssistantPanel(container, state, handlers = {}) {
   clearChildren(container);
 

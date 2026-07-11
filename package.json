@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "lint": "eslint public/js functions/",
+    "lint:fix": "eslint public/js functions/ --fix",
     "dev": "npx wrangler pages dev public --compatibility-date=2026-01-01"
   },
   "devDependencies": {
+    "eslint": "^9.39.5",
     "jsdom": "^25.0.0"
   }
 }

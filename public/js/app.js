@@ -14,64 +14,52 @@ import { mountBriefingPanel } from './panels/briefing.js';
 import { mountAssistantPanel } from './panels/assistant.js';
 import { mountBroadcastPanel } from './panels/broadcast.js';
 import { mountAccessibilityPanel } from './panels/accessibility.js';
+import { SIGNALS_REFRESH_INTERVAL_MS, MATCH_START_OFFSET_MS } from './constants.js';
 
 // Fixed match start time for prototype demo (30 mins from first load, to keep it in "pre-match" or "first-half")
-const MATCH_START_MS = Date.now() + 30 * 60 * 1000;
+const MATCH_START_MS = Date.now() + MATCH_START_OFFSET_MS;
 
 async function bootstrap() {
   try {
-    // 1. Create centralized state store
+    // --- State & Live Signals ---
     const store = createStore({ signals: null });
 
-    // 2. Start LiveSignals generator loop (efficiency goal: 8-10 seconds)
     const updateSignals = () => {
       const signals = generateLiveSignals(Date.now(), MATCH_START_MS);
       store.setState({ signals });
     };
-    
+
     // Initial fetch and set interval (every 8 seconds)
     updateSignals();
-    setInterval(updateSignals, 8000);
+    setInterval(updateSignals, SIGNALS_REFRESH_INTERVAL_MS);
 
-    const kpiContainer = document.getElementById('panel-kpi');
-    if (kpiContainer) {
-      // Dynamic import to avoid missing files breaking tests if not fully implemented yet
-      import('./panels/kpiStrip.js').then(({ mountKpiStrip }) => {
-        mountKpiStrip(kpiContainer, store);
-      });
-    }
+    // --- Panel Mounting ---
+    // Each entry maps a DOM element id to a mount function (closed over store or api as needed).
+    // kpiStrip uses a dynamic import to avoid breaking tests if the file is not yet implemented.
+    const panels = [
+      {
+        id: 'panel-kpi',
+        mount: (el) => {
+          // Dynamic import to avoid missing files breaking tests if not fully implemented yet
+          import('./panels/kpiStrip.js').then(({ mountKpiStrip }) => {
+            mountKpiStrip(el, store);
+          });
+        },
+      },
+      { id: 'panel-status',        mount: (el) => mountStatusBar(el, store)        },
+      { id: 'panel-gates',         mount: (el) => mountGateGrid(el, store)         },
+      { id: 'panel-briefing',      mount: (el) => mountBriefingPanel(el, api)      },
+      { id: 'panel-assistant',     mount: (el) => mountAssistantPanel(el, api)     },
+      { id: 'panel-broadcast',     mount: (el) => mountBroadcastPanel(el, api)     },
+      { id: 'panel-accessibility', mount: (el) => mountAccessibilityPanel(el, api) },
+    ];
 
-    const statusContainer = document.getElementById('panel-status');
-    if (statusContainer) {
-      mountStatusBar(statusContainer, store);
-    }
+    panels.forEach(({ id, mount }) => {
+      const el = document.getElementById(id);
+      if (el) mount(el);
+    });
 
-    const gateGridContainer = document.getElementById('panel-gates');
-    if (gateGridContainer) {
-      mountGateGrid(gateGridContainer, store);
-    }
-
-    const briefingContainer = document.getElementById('panel-briefing');
-    if (briefingContainer) {
-      mountBriefingPanel(briefingContainer, api);
-    }
-
-    const assistantContainer = document.getElementById('panel-assistant');
-    if (assistantContainer) {
-      mountAssistantPanel(assistantContainer, api);
-    }
-
-    const broadcastContainer = document.getElementById('panel-broadcast');
-    if (broadcastContainer) {
-      mountBroadcastPanel(broadcastContainer, api);
-    }
-
-    const accessibilityContainer = document.getElementById('panel-accessibility');
-    if (accessibilityContainer) {
-      mountAccessibilityPanel(accessibilityContainer, api);
-    }
-
-    // 4. Command Palette Logic
+    // --- Command Palette ---
     const paletteOverlay = document.getElementById('command-palette');
     const paletteInput = document.getElementById('palette-input');
     const btnSearch = document.getElementById('btn-search');
@@ -108,7 +96,7 @@ async function bootstrap() {
       });
     }
 
-    // 4. Register Service Worker for PWA (Cache-first for shell, Network-first for /api)
+    // --- Service Worker (PWA) ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => {

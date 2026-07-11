@@ -12,6 +12,17 @@ import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 // renderStatusBar
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders match information, weather, and transit status into `container`.
+ * Clears existing children on each call — safe to call repeatedly.
+ *
+ * @param {HTMLElement} container      - DOM node to render into.
+ * @param {object|null} signals        - Live signals snapshot; if null, renders nothing.
+ * @param {object}      signals.match  - Match metadata (homeTeam, awayTeam, matchStatus, …).
+ * @param {object}      signals.weather - Weather data (condition, tempCelsius, advisory).
+ * @param {Array}       signals.transit - Array of transit line objects.
+ * @returns {void}
+ */
 export function renderStatusBar(container, signals) {
   clearChildren(container);
 

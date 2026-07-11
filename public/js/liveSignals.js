@@ -14,6 +14,9 @@
  *   4 HALF_TIME  45 <= elapsed < 60 min
  *   5 SECOND_HALF 60 <= elapsed < 90 min
  *   6 EGRESS     elapsed >= 90 min
+ *
+ * Signals object shape:
+ *   { match, weather, gates, transit, accessibilityRequests, sustainability }
  */
 
 // ---------------------------------------------------------------------------
@@ -200,6 +203,34 @@ const TRANSIT_BY_PHASE = [
 ];
 
 // ---------------------------------------------------------------------------
+// Sustainability by phase
+// ---------------------------------------------------------------------------
+// ASSUMPTION: Waste diversion rate and active water-refill stations are modelled
+// as fixed per-phase values. A production system would read from venue IoT sensors
+// and smart-bin fill-level feeds.
+//
+// wasteDiversionRatePercent — realistic range 60–85:
+//   - Lower during entry/egress crush (bins overflow, wrong-bin contamination spikes).
+//   - Higher during quiet in-play phases (staff have time to sort and move recyclables).
+//
+// waterRefillStationsActive — out of WATER_REFILL_TOTAL (12):
+//   - 1–2 stations offline during crush for maintenance or power-cycling.
+//   - All 12 active during normal phases.
+
+/** Total number of installed water refill stations at the venue. */
+export const WATER_REFILL_TOTAL = 12;
+
+const SUSTAINABILITY_BY_PHASE = [
+  { wasteDiversionRatePercent: 78, waterRefillStationsActive: 12 }, // FAR_PRE    — low traffic, well-managed
+  { wasteDiversionRatePercent: 72, waterRefillStationsActive: 12 }, // NEAR_PRE   — steady inflow, slight pressure
+  { wasteDiversionRatePercent: 63, waterRefillStationsActive: 10 }, // CRUSH      — peak contamination, 2 stations cycling
+  { wasteDiversionRatePercent: 85, waterRefillStationsActive: 12 }, // FIRST_HALF — crowd inside, bins processed
+  { wasteDiversionRatePercent: 74, waterRefillStationsActive: 12 }, // HALF_TIME  — concession rush, diversion dips
+  { wasteDiversionRatePercent: 82, waterRefillStationsActive: 12 }, // SECOND_HALF — stable, good diversion
+  { wasteDiversionRatePercent: 60, waterRefillStationsActive: 11 }, // EGRESS     — exit surge, 1 station offline for clean
+];
+
+// ---------------------------------------------------------------------------
 // Accessibility request pool
 // ---------------------------------------------------------------------------
 // Each entry is a scenario-fixed request with:
@@ -257,7 +288,10 @@ const REQUEST_POOL = [
  *
  * @param {number} timestampMs  - Current Unix timestamp in milliseconds.
  * @param {number} matchStartMs - Match kick-off Unix timestamp in milliseconds.
- * @returns {object}            - LiveSignals plain object.
+ * @returns {{ match: object, weather: object, gates: Array, transit: Array,
+ *             accessibilityRequests: Array,
+ *             sustainability: { wasteDiversionRatePercent: number, waterRefillStationsActive: number } }}
+ *   LiveSignals plain object.
  */
 export function generateLiveSignals(timestampMs, matchStartMs) {
   const elapsedMin = (timestampMs - matchStartMs) / 60_000;
@@ -301,5 +335,8 @@ export function generateLiveSignals(timestampMs, matchStartMs) {
       note:        r.note,
     }));
 
-  return { match, weather, gates, transit, accessibilityRequests };
+  // Shallow-copy so callers cannot mutate the internal lookup entry
+  const sustainability = { ...SUSTAINABILITY_BY_PHASE[phase] };
+
+  return { match, weather, gates, transit, accessibilityRequests, sustainability };
 }

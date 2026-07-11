@@ -12,9 +12,8 @@ import { callGemini as _callGemini, getGeminiModel } from '../_lib/gemini.js';
 import {
   applyRateLimit, makeCorsHeaders, jsonResponse, getMatchStartMs, SYSTEM_PROMPT,
 } from '../_lib/guard.js';
+import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS } from '../_lib/constants.js';
 
-const MAX_REQUESTS = 20;
-const WINDOW_MS    = 60_000;
 
 // ASSUMPTION: Gate recommendation question is fixed — the AI is asked for the
 // single best gate based on current conditions, not a free-form query.
@@ -34,8 +33,8 @@ const rateLimitStore = new Map();
 export function createHandler({
   callGemini    = _callGemini,
   _rateLimitStore = rateLimitStore,
-  _maxRequests  = MAX_REQUESTS,
-  _windowMs     = WINDOW_MS,
+  _maxRequests  = RATE_LIMIT_MAX_REQUESTS,
+  _windowMs     = RATE_LIMIT_WINDOW_MS,
 } = {}) {
   return async function handler(context) {
     const { request, env } = context;

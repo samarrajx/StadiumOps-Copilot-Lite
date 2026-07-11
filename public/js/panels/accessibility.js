@@ -11,6 +11,19 @@ import { el, clearChildren, refreshIcons } from '../utils/dom.js';
 // renderAccessibilityPanel
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the Accessibility Action Insights panel into `container`.
+ * Shows a generate button, error banner, and a ranked list of accessibility
+ * requests with per-request dispatch controls.
+ *
+ * @param {HTMLElement} container                                  - DOM node to render into.
+ * @param {{ loading: boolean, ranked: Array|null, dispatched: Set<string>, error: string|null }} state
+ *   - Current panel state.
+ * @param {object}      [handlers={}]                              - Event handler callbacks.
+ * @param {Function}    [handlers.onGenerate]                      - Called when the "Get Insights" button is clicked.
+ * @param {Function}    [handlers.onDispatch]                      - Called with the request id string when dispatched.
+ * @returns {void}
+ */
 export function renderAccessibilityPanel(container, state, handlers = {}) {
   clearChildren(container);
 

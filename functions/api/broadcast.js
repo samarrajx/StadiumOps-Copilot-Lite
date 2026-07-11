@@ -14,10 +14,8 @@ import { makeCacheKey, getCached, setCached } from '../_lib/cache.js';
 import {
   applyRateLimit, makeCorsHeaders, jsonResponse, parseJsonBody, SYSTEM_PROMPT,
 } from '../_lib/guard.js';
+import { RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS, BROADCAST_CACHE_TTL_MS } from '../_lib/constants.js';
 
-const MAX_REQUESTS = 20;
-const WINDOW_MS    = 60_000;
-const CACHE_TTL    = 5 * 60 * 1000; // 5 minutes
 
 const rateLimitStore    = new Map();
 const broadcastCacheStore = new Map();
@@ -43,9 +41,9 @@ export function createHandler({
   callGemini     = _callGemini,
   _rateLimitStore  = rateLimitStore,
   _cacheStore    = broadcastCacheStore,
-  _maxRequests   = MAX_REQUESTS,
-  _windowMs      = WINDOW_MS,
-  _cacheTTL      = CACHE_TTL,
+  _maxRequests   = RATE_LIMIT_MAX_REQUESTS,
+  _windowMs      = RATE_LIMIT_WINDOW_MS,
+  _cacheTTL      = BROADCAST_CACHE_TTL_MS,
 } = {}) {
   return async function handler(context) {
     const { request, env } = context;

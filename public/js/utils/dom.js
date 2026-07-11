@@ -71,6 +71,9 @@ export function clearChildren(parent) {
 /**
  * Re-runs Lucide icon replacement on the page.
  * Required after dynamically rendering elements with data-lucide attributes.
+ * No-ops gracefully if the lucide global is absent (e.g. in test environments).
+ *
+ * @returns {void}
  */
 export function refreshIcons() {
   if (window.lucide && typeof window.lucide.createIcons === 'function') {

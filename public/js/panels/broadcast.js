@@ -21,6 +21,20 @@ const MAX_MESSAGE_LENGTH = 300;
 // renderBroadcastPanel
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the PA/Digital Signage Broadcast panel into `container`.
+ * Shows the message textarea, language selector checkboxes, submit button,
+ * and (when available) the translated-output result cards.
+ *
+ * @param {HTMLElement} container                             - DOM node to render into.
+ * @param {{ message: string, selectedLanguages: string[], loading: boolean, result: object|null, error: string|null }} state
+ *   - Current panel state.
+ * @param {object}      [handlers={}]                         - Event handler callbacks.
+ * @param {Function}    [handlers.onInput]                    - Called with the new message string on every keystroke.
+ * @param {Function}    [handlers.onLangToggle]               - Called with (code: string, isChecked: boolean) on checkbox change.
+ * @param {Function}    [handlers.onSubmit]                   - Called when the translate button is clicked.
+ * @returns {void}
+ */
 export function renderBroadcastPanel(container, state, handlers = {}) {
   clearChildren(container);
 
@@ -145,7 +159,7 @@ export function renderBroadcastPanel(container, state, handlers = {}) {
  * @param {{ fetchBroadcast: Function }} api
  */
 export function mountBroadcastPanel(container, api) {
-  let state = {
+  const state = {
     message: '',
     selectedLanguages: [],
     loading: false,

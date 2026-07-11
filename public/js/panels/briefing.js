@@ -11,6 +11,17 @@ import { el, clearChildren, refreshIcons, renderMarkdownToDOM } from '../utils/d
 // renderBriefingPanel
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the briefing panel UI into `container`.
+ * Shows a generate button, a loading skeleton, the AI-generated markdown
+ * briefing, or an empty-state prompt depending on `state`.
+ *
+ * @param {HTMLElement} container               - DOM node to render into.
+ * @param {{ loading: boolean, briefing: string|null, error: string|null }} state
+ *   - Current panel state.
+ * @param {Function}    [onGenerate=()=>{}]     - Callback fired when the generate button is clicked.
+ * @returns {void}
+ */
 export function renderBriefingPanel(container, state, onGenerate = () => {}) {
   clearChildren(container);
 
