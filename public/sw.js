@@ -4,7 +4,7 @@
  * Cache-first for app shell assets, Network-first for /api/ routes.
  */
 
-const CACHE_NAME = 'stadiumops-shell-v2';
+const CACHE_NAME = 'stadiumops-shell-v3';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
