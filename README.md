@@ -4,18 +4,18 @@ A serverless, AI-powered control-room dashboard for FIFA World Cup 2026 venue op
 
 ## Challenge Coverage Matrix
 
-All 8 focus areas named in the challenge brief are covered:
+Our chosen vertical is Venue Operations & Crowd Safety for Tournament Organizers. The table below shows how each real operational need of this persona — routing, congestion, accessibility, transit, sustainability, translation, briefing, and live Q&A — is handled by one cohesive copilot, not as disconnected features.
 
 | # | Focus Area | Feature / File |
 |---|---|---|
-| 1 | **Navigation & Wayfinding** | **Gate Recommend** (`/api/gate-recommend`) — evaluates all gates in real time and returns the single best gate with explicit routing reason. |
-| 2 | **Crowd Management** | **Gate Grid** (`panels/gateGrid.js`) + **Live Signals** (`liveSignals.js`) — real-time density, wait-time, and trend data for all 6 venue gates across 7 match phases. |
-| 3 | **Accessibility** | **Accessibility panel** (`panels/accessibility.js` + `/api/accessibility`) — AI ranks open requests by urgency and suggests dispatch actions; Gate C non-accessible scenario always modelled. |
-| 4 | **Transportation** | **Status Bar** (`panels/statusBar.js`) — live transit feed (rail/shuttle/bus) state and ETA across all match phases. |
-| 5 | **Sustainability** | **KPI Strip** (`panels/kpiStrip.js`) — real-time waste diversion rate % and water refill station count from `liveSignals.js` sustainability signals. |
-| 6 | **Multilingual Assistance** | **Broadcast** (`panels/broadcast.js` + `/api/broadcast`) — translates operator messages into up to 6 languages (es, fr, ar, de, hi, pt) with plain-language rewrite; results cached to save tokens. |
-| 7 | **Operational Intelligence** | **Situation Briefing** (`panels/briefing.js` + `/api/briefing`) — consolidates 10+ live signals into a concise AI-generated situation report for the duty supervisor. |
-| 8 | **Real-time Decision Support** | **Decision Assistant** (`panels/assistant.js` + `/api/assistant`) — multi-turn conversational AI grounded strictly in live signals, with prompt-level injection defence. |
+| 1 | **Navigation & Wayfinding** | **Gate Recommend** (`/api/gate-recommend`) — evaluates all gates in real time and returns the single best gate with explicit routing reasons to optimize fan pathing. |
+| 2 | **Crowd Management** | **Gate Grid** (`panels/gateGrid.js`) + **Live Signals** (`liveSignals.js`) — tracks real-time density, wait-time, and queue trend telemetry across 7 distinct matchday phases. |
+| 3 | **Accessibility** | **Accessibility panel** (`panels/accessibility.js` + `/api/accessibility`) — ranks mobility and assistance requests by urgency to ensure priority dispatch and routing around non-accessible gates. |
+| 4 | **Transportation** | **Status Bar** (`panels/statusBar.js`) — integrates transit carrier state and arrival timelines to coordinate crowd inflow with commuter schedules. |
+| 5 | **Sustainability** | **KPI Strip** (`panels/kpiStrip.js`) — monitors waste diversion rates and water refill station availability to manage ecological impact under crowd pressure. |
+| 6 | **Multilingual Assistance** | **Broadcast** (`panels/broadcast.js` + `/api/broadcast`) — translates digital signage announcements into up to 6 target languages simultaneously for international attendees. |
+| 7 | **Operational Intelligence** | **Situation Briefing** (`panels/briefing.js` + `/api/briefing`) — synthesizes complex, multi-system telemetry into a cohesive 3-5 sentence brief for command staff. |
+| 8 | **Real-time Decision Support** | **Decision Assistant** (`panels/assistant.js` + `/api/assistant`) — conversational workspace for operators to query current stadium signals and retrieve grounded operational decisions. |
 
 ## Vertical & Persona
 **Persona**: Tournament Organizer / Venue Operations Staff
@@ -50,7 +50,7 @@ All 8 focus areas named in the challenge brief are covered:
 │   │   ├── panels/        # UI component logic (gateGrid, assistant, statusBar, etc.)
 │   │   └── utils/         # DOM helpers, store, validators
 │   └── index.html         # Main dashboard layout
-├── tests/                 # 225 native node:test JSDOM tests covering both backend and frontend
+├── tests/                 # 230 native node:test JSDOM tests covering both backend and frontend
 ├── .dev.vars              # Local development secrets (Not committed)
 └── package.json           # Scripts and dependencies
 ```
@@ -104,7 +104,7 @@ The following security constraints were rigorously implemented:
 The test suite utilizes the native Node.js `node:test` runner and `jsdom`. It covers:
 - **Backend**: API prompt construction, rate-limit logic, JSON validation logic, missing env variable guards, and mocked Gemini REST calls.
 - **Frontend**: Store pub-sub mechanics, API wrappers, and JSDOM component rendering (ensuring UI logic, accessibility classes, and event listeners behave as expected under the new Enterprise class structure).
--
+
 ## Accessibility
 
 - **Skip Link**: The main layout includes a `#main-content` anchor for keyboard navigation.
