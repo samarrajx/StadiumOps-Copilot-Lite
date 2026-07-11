@@ -6,31 +6,37 @@
    Tokens & Variables
 -------------------------------------------------------------------------- */
 :root {
-  /* Colors - Backgrounds (Enterprise Slate) */
-  --bg-app: #09090b; /* Very dark, almost black */
-  --bg-panel: #18181b; /* Zinc 900 */
-  --bg-panel-hover: #27272a; /* Zinc 800 */
-  --bg-input: #09090b;
-  --bg-overlay: rgba(9, 9, 11, 0.8);
+  /* Colors - Backgrounds (Obsidian Navy-Black) */
+  --bg-app: #0b0f14; 
+  --bg-panel: #131920; 
+  --bg-panel-hover: #1b232c; 
+  --bg-input: #0b0f14;
+  --bg-overlay: rgba(11, 15, 20, 0.85);
   
   /* Colors - Borders */
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-focus: #3b82f6; /* Blue 500 */
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-focus: #2ecc71; 
   
   /* Colors - Typography */
-  --text-primary: #fafafa; /* Zinc 50 */
-  --text-secondary: #a1a1aa; /* Zinc 400 */
-  --text-muted: #71717a; /* Zinc 500 */
+  --text-primary: #f0f4f8; 
+  --text-secondary: #8a9bb0; 
+  --text-muted: #627284; 
   
   /* Colors - Semantic (Accessible Contrast) */
-  --color-success: #10b981; /* Emerald 500 */
-  --color-success-bg: rgba(16, 185, 129, 0.1);
-  --color-warning: #f59e0b; /* Amber 500 */
+  --color-success: #2ecc71; 
+  --color-success-bg: rgba(46, 204, 113, 0.1);
+  --color-warning: #f59e0b; 
   --color-warning-bg: rgba(245, 158, 11, 0.1);
-  --color-danger: #ef4444; /* Red 500 */
+  --color-danger: #ef4444; 
   --color-danger-bg: rgba(239, 68, 68, 0.1);
-  --color-info: #3b82f6; /* Blue 500 */
+  --color-info: #3b82f6; 
   --color-info-bg: rgba(59, 130, 246, 0.1);
+
+  /* Glassmorphism Configuration */
+  --glass-blur: 12px;
+  --glass-bg: rgba(19, 25, 32, 0.80);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.20);
   
   /* Spacing */
   --space-1: 0.25rem;
@@ -40,10 +46,10 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
   
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Radii (Compact & Technical) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
   
   /* Shadows */
@@ -58,7 +64,7 @@
   
   /* Fonts */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* --------------------------------------------------------------------------
@@ -141,7 +147,7 @@ a:hover {
    Layouts
 -------------------------------------------------------------------------- */
 
-/* Command Bar (Header) */
+/* Command Bar (Header - Restrained Glassmorphism) */
 .command-bar {
   position: sticky;
   top: 0;
@@ -150,9 +156,11 @@ a:hover {
   justify-content: space-between;
   align-items: center;
   padding: var(--space-3) var(--space-6);
-  background: rgba(9, 9, 11, 0.75);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-light);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .cmd-brand {
@@ -204,7 +212,7 @@ a:hover {
 
 .cmd-actions .btn-icon:hover {
   color: var(--text-primary);
-  background: var(--bg-panel);
+  background: var(--bg-panel-hover);
 }
 
 .cmd-shortcut {
@@ -249,7 +257,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none; /* Flat style */
 }
 
 .kpi-header {
@@ -267,6 +275,7 @@ a:hover {
 }
 
 .kpi-value {
+  font-family: var(--font-mono); /* Monospace numbers */
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -276,6 +285,7 @@ a:hover {
 }
 
 .kpi-trend {
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 500;
   padding: 2px 6px;
@@ -290,6 +300,7 @@ a:hover {
 .app-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
+  align-items: start; /* Prevents cards from stretching vertically to match tallest sibling */
   gap: var(--space-6);
   padding: 0 var(--space-6) var(--space-6) var(--space-6);
   max-width: 1600px;
@@ -318,7 +329,7 @@ a:hover {
 
 /* --------------------------------------------------------------------------
    Panels
--------------------------------------------------------------------------- */
+   -------------------------------------------------------------------------- */
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-light);
@@ -326,13 +337,14 @@ a:hover {
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-md);
-  transition: box-shadow var(--transition-normal);
+  box-shadow: none; /* Flat style */
+  transition: border-color var(--transition-normal);
   animation: fadeIn 0.5s ease-out both;
 }
 
 .panel:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 /* Stagger animations */
@@ -503,7 +515,7 @@ input:focus, textarea:focus {
   gap: var(--space-1);
 }
 .gate-metric svg { width: 14px; height: 14px; }
-.gate-metric-val { color: var(--text-primary); font-weight: 500; }
+.gate-metric-val { color: var(--text-primary); font-weight: 500; font-family: var(--font-mono); }
 
 .gate-card--no-wheelchair {
   opacity: 0.6;
@@ -687,10 +699,14 @@ input:focus, textarea:focus {
   font-size: 0.875rem;
 }
 .access-meta {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-secondary);
   display: flex;
   gap: var(--space-2);
+}
+.transit-eta {
+  font-family: var(--font-mono);
 }
 
 /* --------------------------------------------------------------------------
